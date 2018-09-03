@@ -13,6 +13,17 @@ class Cube(object):
     BLUE = colors.CUBE_BLUE
     GOLD = colors.CUBE_GOLD
 
+  class Sides(object):
+    """ Represents cube sides. """
+
+    LEFT = "left"
+    RIGHT = "right"
+    TOP = "top"
+    BOTTOM = "bottom"
+
+  # Base cube size, in px.
+  CUBE_SIZE = 200
+
   # Currently selected cube. There can be only one.
   _selected = None
 
@@ -44,7 +55,9 @@ class Cube(object):
     x, y = self.__pos
 
     # Draw the actual cube shapes.
-    case = obj_canvas.Rectangle(self.__canvas, self.__pos, (200, 200),
+    base_size = Cube.CUBE_SIZE
+    case = obj_canvas.Rectangle(self.__canvas, self.__pos,
+                                (base_size, base_size),
                                 fill=self.__color, outline=self.__color)
     screen = obj_canvas.Rectangle(self.__canvas, (x, y - 20), (180, 140),
                                   fill=colors.SCREEN, outline=colors.SCREEN)
@@ -70,6 +83,29 @@ class Cube(object):
     # When moving, keeps track of the previous mouse position.
     self.__prev_mouse_x, self.__prev_mouse_y = event.get_pos()
 
+  def get_pos(self):
+    """
+    Returns:
+      The current position of the cube as (x, y). """
+    case = self.__cube_shapes[0]
+    return case.get_pos()
+
+  def set_pos(self, x, y):
+    """ Sets the position of the cube.
+    Args:
+      x: The new x position.
+      y: The new y position. """
+    # Figure out the offset from the old position.
+    old_x, old_y = self.get_pos()
+    move_x = x - old_x
+    move_y = y - old_y
+
+    for shape in self.__cube_shapes:
+      shape.move(move_x, move_y)
+
+    # Update the canvas.
+    self.__canvas.update()
+
   def drag(self, event):
     """ Respond to a mouse drag while the cube is selected.
     Args:
@@ -91,9 +127,84 @@ class Cube(object):
 
   def clear_drag(self):
     """ Clears the current dragging state. """
+    if not self.__dragging:
+      # Not dragging this cube.
+      return
+
     self.__dragging = False
-    if Cube._selected == self:
-      Cube._selected = None
+    assert Cube._selected == self
+    Cube._selected = None
+
+  def is_near(self, other, threshold=100):
+    """ Checks if this cube is near another one.
+    Args:
+      other: The cube to check if we are near.
+      threshold: Boundary at which we consider ourselves near.
+    Returns:
+      None if the two cubes are not near, otherwise it returns the side of this
+      cube that is nearest the other cube. """
+    # We'll use the bounding boxes on the case rectangles for this check, since
+    # they are the biggest.
+    my_case = self.__cube_shapes[0]
+    other_case = other.__cube_shapes[0]
+
+    col_x, col_y = obj_canvas.CanvasObject.check_collision(my_case, other_case,
+                                                           threshold=threshold)
+
+    if (not col_x or not col_y):
+      # No collision.
+      return None
+
+    my_case_x, my_case_y = my_case.get_pos()
+    other_case_x, other_case_y = other_case.get_pos()
+    x_dist = abs(my_case_x - other_case_x)
+    y_dist = abs(my_case_y - other_case_y)
+
+    if y_dist < x_dist:
+      if my_case_x > other_case_x:
+        # Our left side is colliding.
+        return Cube.Sides.LEFT
+      else:
+        # Our right side is colliding.
+        return Cube.Sides.RIGHT
+
+    else:
+      if my_case_y > other_case_y:
+        # Our top side is colliding.
+        return Cube.Sides.TOP
+      else:
+        # Our bottom side is colliding.
+        return Cube.Sides.BOTTOM
+
+  def snap(self, other, side):
+    """ Snap this cube to another cube.
+    Args:
+      other: The cube to snap to.
+      side: The side of this cube to snap on. """
+    # Align the cubes in the display.
+    other_x, other_y = other.get_pos()
+    new_x = None
+    new_y = None
+
+    if side in (Cube.Sides.LEFT, Cube.Sides.RIGHT):
+      # We need to align the y-axis.
+      new_y = other.get_pos()[1]
+    else:
+      # We need to align the x-axis.
+      new_x = other.get_pos()[0]
+
+    # Make sure the sides are touching.
+    size = Cube.CUBE_SIZE
+    if side == Cube.Sides.LEFT:
+      new_x = other_x + size
+    elif side == Cube.Sides.RIGHT:
+      new_x = other_x - size
+    elif side == Cube.Sides.TOP:
+      new_y = other_y + size
+    else:
+      new_y = other_y - size
+
+    self.set_pos(new_x, new_y)
 
 
 class Tabletop(object):
@@ -119,6 +230,18 @@ class Tabletop(object):
     if selected_cube is None:
       # No cube is selected. Do nothing.
       return
+
+    # Check if the cube is near any others.
+    for cube in self.__cubes:
+      if cube == selected_cube:
+        # No point in checking ourselves.
+        continue
+
+      near_side = selected_cube.is_near(cube)
+      if near_side is not None:
+        # We are near this cube. Snap to it.
+        selected_cube.snap(cube, near_side)
+        break
 
     selected_cube.clear_drag()
 

@@ -192,13 +192,13 @@ class CanvasObject(GuiObject):
     canvas object, and set _pos_x and _pos_y accordingly. """
     raise NotImplementedError("_draw_object() must be implemented by subclass.")
 
-  def _get_bbox(self):
+  def get_bbox(self):
     """ Gets the bounding box for this object. Must be implemented by the
     subclass.
     Returns:
       The bounding box, as a tuple containing the upper left corner coordinates,
       and the lower right corner coordinates. """
-    raise NotImplementedError("_get_bbox() must be implemented by subclass.")
+    raise NotImplementedError("get_bbox() must be implemented by subclass.")
 
   def point_within(self, point):
     """ Checks if a point is within an object. By default, this works by
@@ -210,7 +210,7 @@ class CanvasObject(GuiObject):
     x, y = point
 
     # Get the bounding box.
-    pt1_x, pt1_y, pt2_x, pt2_y = self._get_bbox()
+    pt1_x, pt1_y, pt2_x, pt2_y = self.get_bbox()
 
     in_x = (x >= pt1_x and x <= pt2_x)
     in_y = (y >= pt1_y and y <= pt2_y)
@@ -265,18 +265,20 @@ class CanvasObject(GuiObject):
     self._canvas.bind_to_child(self, event_type, callback)
 
   @classmethod
-  def check_collision(cls, obj1, obj2):
+  def check_collision(cls, obj1, obj2, threshold=0):
     """ Checks if there is a collision between two objects.
     Args:
       obj1: The first object.
       obj2: The second object.
+      threshold: Pixel nearness threshold at which we consider two objects to be
+                 colliding.
     Returns:
       A tuple of booleans. The first element indicates whether there is a
       collision in the x direction, the second indicates whether there is a
       collision in the y direction. """
     # Get the bounding boxes of both objects.
-    pt1_x, pt1_y, pt2_x, pt2_y = obj1._get_bbox()
-    pt3_x, pt3_y, pt4_x, pt4_y = obj2._get_bbox()
+    pt1_x, pt1_y, pt2_x, pt2_y = obj1.get_bbox()
+    pt3_x, pt3_y, pt4_x, pt4_y = obj2.get_bbox()
 
     # Check for overlap.
     half_width1 = (pt2_x - pt1_x) / 2
@@ -293,9 +295,9 @@ class CanvasObject(GuiObject):
     center_y_dist = abs(center2_y - center1_y)
 
     collision = [False, False]
-    if center_x_dist <= half_width1 + half_width2:
+    if center_x_dist <= half_width1 + half_width2 + threshold:
       collision[0] = True
-    if center_y_dist <= half_height1 + half_height2:
+    if center_y_dist <= half_height1 + half_height2 + threshold:
       collision[1] = True
 
     return collision
@@ -318,12 +320,12 @@ class Circle(CanvasObject):
     # Get the raw canvas to draw with.
     canvas = self._canvas.get_raw_canvas()
 
-    p1_x, p1_y, p2_x, p2_y = self._get_bbox()
+    p1_x, p1_y, p2_x, p2_y = self.get_bbox()
     self._reference = canvas.create_oval(p1_x, p1_y, p2_x, p2_y,
                                          fill=self._fill,
                                          outline=self._outline)
 
-  def _get_bbox(self):
+  def get_bbox(self):
     """ See superclass documentation. """
     # Calculate corner points.
     p1_x = self._pos_x - self.__radius
@@ -351,12 +353,12 @@ class Rectangle(CanvasObject):
     # Get the raw canvas to draw with.
     canvas = self._canvas.get_raw_canvas()
 
-    p1_x, p1_y, p2_x, p2_y = self._get_bbox()
+    p1_x, p1_y, p2_x, p2_y = self.get_bbox()
     self._reference = canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y,
                                               fill=self._fill,
                                               outline=self._outline)
 
-  def _get_bbox(self):
+  def get_bbox(self):
     # Calculate corner points.
     p1_x = self._pos_x - self.__width / 2
     p1_y = self._pos_y - self.__height / 2
