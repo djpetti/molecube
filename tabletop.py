@@ -1,3 +1,4 @@
+import colors
 import event
 import obj_canvas
 
@@ -5,15 +6,25 @@ import obj_canvas
 class Cube(object):
   """ Represents a single cube. """
 
+  class Colors(object):
+    """ Represents cube colors. """
+
+    RED = colors.CUBE_RED
+    BLUE = colors.CUBE_BLUE
+    GOLD = colors.CUBE_GOLD
+
   # Currently selected cube. There can be only one.
   _selected = None
 
-  def __init__(self, canvas, pos):
+  def __init__(self, canvas, pos, color):
     """
     Args:
       canvas: The canvas to draw the cube on.
-      pos: The initial position of the cube. """
+      pos: The initial position of the cube.
+      color: The color of the cube. """
     self.__canvas = canvas
+    self.__pos = pos
+    self.__color = color
     # Whether the cube is currently being dragged.
     self.__dragging = False
     # List of shapes in the cube.
@@ -30,11 +41,21 @@ class Cube(object):
 
   def __draw_cube(self):
     """ Draws the cube on the canvas. """
-    # Draw the actual cube shapes.
-    case = obj_canvas.Rectangle(self.__canvas, (100, 100), (200, 200),
-                                fill="red")
+    x, y = self.__pos
 
-    self.__cube_shapes.append(case)
+    # Draw the actual cube shapes.
+    case = obj_canvas.Rectangle(self.__canvas, self.__pos, (200, 200),
+                                fill=self.__color, outline=self.__color)
+    screen = obj_canvas.Rectangle(self.__canvas, (x, y - 20), (180, 140),
+                                  fill=colors.SCREEN, outline=colors.SCREEN)
+    button_l = obj_canvas.Rectangle(self.__canvas, (x - 65, y + 75), (50, 30),
+                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+    button_c = obj_canvas.Rectangle(self.__canvas, (x, y + 75), (50, 30),
+                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+    button_r = obj_canvas.Rectangle(self.__canvas, (x + 65, y + 75), (50, 30),
+                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+
+    self.__cube_shapes.extend([case, screen, button_l, button_c, button_r])
 
     # Bind mouse events for the cube.
     case.bind_event(event.MousePressEvent, self.__cube_clicked)
@@ -112,9 +133,11 @@ class Tabletop(object):
     # Move the cube.
     selected_cube.drag(event)
 
-  def make_cube(self):
-    """ Adds a new cube to the canvas. """
-    cube = Cube(self.__canvas, (100, 100))
+  def make_cube(self, color=Cube.Colors.RED):
+    """ Adds a new cube to the canvas.
+    Args:
+      color: The color of the cube. """
+    cube = Cube(self.__canvas, (100, 100), color)
     self.__cubes.append(cube)
 
   def run(self):
