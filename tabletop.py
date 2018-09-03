@@ -21,6 +21,21 @@ class Cube(object):
     TOP = "top"
     BOTTOM = "bottom"
 
+    # Associates each side with its opposite.
+    _OPPOSITES = {LEFT: RIGHT,
+                  RIGHT: LEFT,
+                  TOP: BOTTOM,
+                  BOTTOM: TOP}
+
+    @classmethod
+    def opposite(cls, side):
+      """ Gets the opposite side to a specified one.
+      Args:
+        side: The side to get the opposite of.
+      Returns:
+        The opposite side. """
+      return cls._OPPOSITES[side]
+
   # Base cube size, in px.
   CUBE_SIZE = 200
 
@@ -36,10 +51,20 @@ class Cube(object):
     self.__canvas = canvas
     self.__pos = pos
     self.__color = color
+
     # Whether the cube is currently being dragged.
     self.__dragging = False
     # List of shapes in the cube.
     self.__cube_shapes = []
+    # List of other cubes that are currently connected to this one. A None
+    # in a position indicates that no cube is connected there.
+    self.__connected = {Cube.Sides.LEFT: None,
+                        Cube.Sides.RIGHT: None,
+                        Cube.Sides.TOP: None,
+                        Cube.Sides.BOTTOM: None}
+    # The current application running on the cube. If None, then no application
+    # is running.
+    self.__application = None
 
     self.__draw_cube()
 
@@ -80,8 +105,66 @@ class Cube(object):
     # The cube is now selected.
     Cube._selected = self
 
+    # As soon as the cube is selected, all connections are broken.
+    self.__clear_connections()
     # When moving, keeps track of the previous mouse position.
     self.__prev_mouse_x, self.__prev_mouse_y = event.get_pos()
+
+  def __config_changed_hook(self):
+    """ Run when the connection configuration changes. It takes care of
+    notifying the running application. """
+    if self.__application is None:
+      # No application.
+      return
+
+    self.__application.on_reconfiguration(self.get_connections())
+
+  def __add_connection(self, other, side):
+    """ Adds a connection from this cube to another one.
+    Args:
+      other: The cube to connect to.
+      side: The side at which this cube is connected. """
+    if self.__connected[side] == other:
+      return
+
+    self.__connected[side] = other
+    # Report a state change.
+    self.__config_changed_hook()
+
+  def __clear_connections(self):
+    """ Clears all connections to this cube. """
+    changed = False
+
+    for side in self.__connected.iterkeys():
+      if self.__connected[side] is not None:
+        # Clear the connection on the other side.
+        opposite = Cube.Sides.opposite(side)
+        self.__connected[side].disconnect(opposite)
+        changed = True
+
+      self.__connected[side] = None
+
+    if changed:
+      # Report a state change.
+      self.__config_changed_hook()
+
+  def get_connections(self):
+    """
+    Returns:
+      A dictionary of all cubes that are currently connected to this one.
+    """
+    return self.__connected.copy()
+
+  def disconnect(self, side):
+    """ Removes a connection from the cube.
+    Args:
+      side: The side to disconnect. """
+    if self.__connected[side] is None:
+      return
+
+    self.__connected[side] = None
+    # Report a state change.
+    self.__config_changed_hook()
 
   def get_pos(self):
     """
@@ -105,6 +188,13 @@ class Cube(object):
 
     # Update the canvas.
     self.__canvas.update()
+
+  def run_app(self, app):
+    """ Run a new application on the cube.
+    Args:
+      app: The app to run. """
+    self.__application = app
+    self.__application.run(self)
 
   def drag(self, event):
     """ Respond to a mouse drag while the cube is selected.
@@ -206,6 +296,10 @@ class Cube(object):
 
     self.set_pos(new_x, new_y)
 
+    # Indicate that we are connected to this cube.
+    self.__add_connection(other, side)
+    other.__add_connection(self, Cube.Sides.opposite(side))
+
 
 class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
@@ -259,9 +353,18 @@ class Tabletop(object):
   def make_cube(self, color=Cube.Colors.RED):
     """ Adds a new cube to the canvas.
     Args:
-      color: The color of the cube. """
+      color: The color of the cube.
+    Returns:
+      The cube that it made. """
     cube = Cube(self.__canvas, (100, 100), color)
     self.__cubes.append(cube)
+
+    return cube
+
+  def start_app_on_all(self, app):
+    """ Starts an application on all the cubes. """
+    for cube in self.__cubes:
+      cube.run_app(app)
 
   def run(self):
     """ Runs the tabletop simulation indefinitely. """
