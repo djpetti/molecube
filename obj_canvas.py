@@ -366,3 +366,35 @@ class Rectangle(CanvasObject):
     p2_y = self._pos_y + self.__height / 2
 
     return (p1_x, p1_y, p2_x, p2_y)
+
+class Text(CanvasObject):
+  """ Draws text on the canvas. """
+
+  def __init__(self, canvas, pos, text, font, **kwargs):
+    """
+    Args:
+      canvas: The canvas to draw on.
+      pos: The center position of the text.
+      text: The actual text.
+      font: The Tkinter font to use. """
+    self.__text = text
+    self.__font = font
+
+    if "outline" in kwargs:
+      raise ValueError("Text cannot have an outline.")
+
+    super(Text, self).__init__(canvas, pos, **kwargs)
+
+  def _draw_object(self):
+    """ Draw the text on the canvas. """
+    # Get the raw canvas to draw with.
+    canvas = self._canvas.get_raw_canvas()
+
+    self._reference = canvas.create_text(self._pos_x, self._pos_y,
+                                         text=self.__text,
+                                         font=self.__font,
+                                         fill=self._fill)
+
+  def get_bbox(self):
+    # TODO (danielp): Real bounding box calculation.
+    return (self._pos_x, self._pos_y, self._pos_x, self._pos_y)

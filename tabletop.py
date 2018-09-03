@@ -1,4 +1,5 @@
 import colors
+import display
 import event
 import obj_canvas
 
@@ -84,8 +85,7 @@ class Cube(object):
     case = obj_canvas.Rectangle(self.__canvas, self.__pos,
                                 (base_size, base_size),
                                 fill=self.__color, outline=self.__color)
-    screen = obj_canvas.Rectangle(self.__canvas, (x, y - 20), (180, 140),
-                                  fill=colors.SCREEN, outline=colors.SCREEN)
+    self.__screen = display.Display(self.__canvas, (x, y - 20), (180, 140))
     button_l = obj_canvas.Rectangle(self.__canvas, (x - 65, y + 75), (50, 30),
                                     fill=colors.BUTTONS, outline=colors.BUTTONS)
     button_c = obj_canvas.Rectangle(self.__canvas, (x, y + 75), (50, 30),
@@ -93,7 +93,7 @@ class Cube(object):
     button_r = obj_canvas.Rectangle(self.__canvas, (x + 65, y + 75), (50, 30),
                                     fill=colors.BUTTONS, outline=colors.BUTTONS)
 
-    self.__cube_shapes.extend([case, screen, button_l, button_c, button_r])
+    self.__cube_shapes.extend([case, self.__screen, button_l, button_c, button_r])
 
     # Bind mouse events for the cube.
     case.bind_event(event.MousePressEvent, self.__cube_clicked)
@@ -189,10 +189,16 @@ class Cube(object):
     # Update the canvas.
     self.__canvas.update()
 
+  def get_display(self):
+    """
+    Returns:
+      The display object for this cube. """
+    return self.__screen
+
   def run_app(self, app):
     """ Run a new application on the cube.
     Args:
-      app: The app to run. """
+      app: The class of the app to run. """
     self.__application = app
     self.__application.run(self)
 
@@ -361,9 +367,14 @@ class Tabletop(object):
 
     return cube
 
-  def start_app_on_all(self, app):
-    """ Starts an application on all the cubes. """
+  def start_app_on_all(self, app_type):
+    """ Starts an application on all the cubes.
+    Args:
+      app_type: The class of the app to start. """
     for cube in self.__cubes:
+      # Make a new instance for this cube.
+      app = app_type()
+      # Run it.
       cube.run_app(app)
 
   def run(self):

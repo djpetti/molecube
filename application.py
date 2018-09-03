@@ -14,3 +14,14 @@ class Application(object):
     Args:
       config: The new configuration, as returned by Cube.get_connections(). """
     return
+
+  def draw_text(self, *args, **kwargs):
+    """ Draws text on the cube screen. Arguments are passed transparently to the
+    cube display object. """
+    display = self.__cube.get_display()
+    return display.draw_text(*args, **kwargs)
+
+  def clear_display(self):
+    """ Clears the cube screen. """
+    display = self.__cube.get_display()
+    return display.clear()
