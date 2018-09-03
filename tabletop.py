@@ -5,6 +5,9 @@ import obj_canvas
 class Cube(object):
   """ Represents a single cube. """
 
+  # Currently selected cube. There can be only one.
+  _selected = None
+
   def __init__(self, canvas, pos):
     """
     Args:
@@ -18,6 +21,13 @@ class Cube(object):
 
     self.__draw_cube()
 
+  @classmethod
+  def get_selected(cls):
+    """
+    Returns:
+      The currently selected cube. """
+    return cls._selected
+
   def __draw_cube(self):
     """ Draws the cube on the canvas. """
     # Draw the actual cube shapes.
@@ -28,19 +38,21 @@ class Cube(object):
 
     # Bind mouse events for the cube.
     case.bind_event(event.MousePressEvent, self.__cube_clicked)
-    case.bind_event(event.MouseDragEvent, self.__cube_dragged)
 
   def __cube_clicked(self, event):
     """ Called when the user presses the mouse button over the cube. """
     # We are now dragging this cube.
     self.__dragging = True
+    # The cube is now selected.
+    Cube._selected = self
 
     # When moving, keeps track of the previous mouse position.
     self.__prev_mouse_x, self.__prev_mouse_y = event.get_pos()
 
-  def __cube_dragged(self, event):
-    """ Called when the user moves the mouse over the cube while the button is
-    pressed. """
+  def drag(self, event):
+    """ Respond to a mouse drag while the cube is selected.
+    Args:
+      event: The drag event to respond to. """
     if not self.__dragging:
       # We're not actively dragging this cube. Don't move it.
       return
@@ -59,6 +71,8 @@ class Cube(object):
   def clear_drag(self):
     """ Clears the current dragging state. """
     self.__dragging = False
+    if Cube._selected == self:
+      Cube._selected = None
 
 
 class Tabletop(object):
@@ -71,15 +85,32 @@ class Tabletop(object):
     # Canvas on which to draw cubes.
     self.__canvas = obj_canvas.Canvas()
 
+    # When we drag the mouse, we want to move the currently-selected cube.
+    self.__canvas.bind_event(event.MouseDragEvent, self.__mouse_dragged)
     # When we release the mouse button, we want to clear the dragging state for
     # all the cubes.
     self.__canvas.bind_event(event.MouseReleaseEvent, self.__mouse_released)
 
   def __mouse_released(self, event):
     """ Called when the user releases the mouse button. """
-    # Clear the dragging state for all the cubes.
-    for cube in self.__cubes:
-      cube.clear_drag()
+    # Clear the dragging state of the selected cube.
+    selected_cube = Cube.get_selected()
+    if selected_cube is None:
+      # No cube is selected. Do nothing.
+      return
+
+    selected_cube.clear_drag()
+
+  def __mouse_dragged(self, event):
+    """ Called when the user drags with the mouse. """
+    # Get the currently-selected cube.
+    selected_cube = Cube.get_selected()
+    if selected_cube is None:
+      # No cube is selected. Do nothing.
+      return
+
+    # Move the cube.
+    selected_cube.drag(event)
 
   def make_cube(self):
     """ Adds a new cube to the canvas. """
