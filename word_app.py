@@ -98,15 +98,31 @@ class WordGameChecker(Application):
   """ A simple word game for a little demo. This version of the app can be
   connected to a word in order to check its validity. """
 
-  def _start_app(self):
+  # Set of valid words.
+  _VALID_WORDS = set(["SET", "SEAT", "SEA", "SENT", "NET", "NETS", "TEN",
+                      "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS"])
+
+  def __reset_display(self):
+    """ Resets the display on the checker cube. """
     # Indicate that this is for checking.
     self.clear_display()
     self.draw_text("Check", (0, 0), 18)
 
+  def _start_app(self):
+    self.__reset_display()
+
   def _on_message_receive(self, side, message):
     # Get the word response.
     word = message["word"]
-    print word
+
+    if word in WordGameChecker._VALID_WORDS:
+      # Word is valid.
+      self.clear_display()
+      self.draw_text("GOOD", (0, 0), 18)
+    else:
+      # Word is invalid.
+      self.clear_display()
+      self.draw_text("BAD", (0, 0), 18)
 
   def on_reconfiguration(self, config):
     # If we connect the checker cube to something, we want to check the current
@@ -120,6 +136,9 @@ class WordGameChecker(Application):
 
     if send_side is None:
       # This means we disconnected the checker cube, in which case, do nothing.
+      # However, we do want to reset the display.
+      self.__reset_display()
+
       return
 
     # Send the word check message.
