@@ -63,3 +63,10 @@ class Application(object):
     """ Clears the cube screen. """
     display = self.__cube.get_display()
     return display.clear()
+
+  def set_background_color(self, color):
+    """ Sets the display background color.
+    Args:
+      color: The color to set it to. """
+    display = self.__cube.get_display()
+    display.set_fill(color)

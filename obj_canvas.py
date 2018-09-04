@@ -241,6 +241,12 @@ class CanvasObject(GuiObject):
       The position of the object. """
     return (self._pos_x, self._pos_y)
 
+  def set_fill(self, fill):
+    """ Changes the fill of the object. """
+    canvas = self._canvas.get_raw_canvas()
+    canvas.itemconfig(self._reference, fill=fill)
+    self._canvas.update()
+
   def move(self, x_shift, y_shift):
     """ Moves an object by a certain amount. It does not update the canvas
     afterwards.

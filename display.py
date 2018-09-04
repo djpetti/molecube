@@ -33,7 +33,7 @@ class Display(obj_canvas.CanvasObject):
 
     self.__display_objs.append(self.__background)
     # In this case, reference just points to the background.
-    self._reference = self.__background
+    self._reference = self.__background._reference
 
   def get_bbox(self):
     # To implement this, we can just use the bbox of the background.

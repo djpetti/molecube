@@ -1,5 +1,9 @@
+import time
+
 from application import Application
 from tabletop import Cube
+
+import colors
 
 
 class WordGameLetter(Application):
@@ -77,6 +81,21 @@ class WordGameLetter(Application):
 
     self.__received_words += 1
 
+  def __handle_flash_message(self, side, message):
+    # Get color and how long to flash for.
+    color = message["color"]
+
+    # Do the flash.
+    self.set_background_color(color)
+
+    # Pass it on.
+    if (self.__connections[Cube.Sides.RIGHT] is not None and \
+        side != Cube.Sides.RIGHT):
+      self.send_message(Cube.Sides.RIGHT, message)
+    if (self.__connections[Cube.Sides.LEFT] is not None and \
+        side != Cube.Sides.LEFT):
+      self.send_message(Cube.Sides.LEFT, message)
+
   def _start_app(self):
     # Draw the letter on the screen.
     self.clear_display()
@@ -89,6 +108,9 @@ class WordGameLetter(Application):
     if message["type"] == "word_resp":
       # This message is in response to a word request message.
       self.__handle_word_resp_message(side, message)
+    if message["type"] == "flash":
+      # This message flashes the screen a specific color.
+      self.__handle_flash_message(side, message)
 
   def on_reconfiguration(self, config):
     # Save the new configuration.
@@ -100,7 +122,7 @@ class WordGameChecker(Application):
 
   # Set of valid words.
   _VALID_WORDS = set(["SET", "SEAT", "SEA", "SENT", "NET", "NETS", "TEN",
-                      "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS"])
+                      "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS", "NEAT"])
 
   def __reset_display(self):
     """ Resets the display on the checker cube. """
@@ -115,14 +137,34 @@ class WordGameChecker(Application):
     # Get the word response.
     word = message["word"]
 
+    flash_color = None
     if word in WordGameChecker._VALID_WORDS:
       # Word is valid.
       self.clear_display()
       self.draw_text("GOOD", (0, 0), 18)
+
+      # Flash the display gold.
+      flash_color = colors.CUBE_GOLD
+
     else:
       # Word is invalid.
       self.clear_display()
       self.draw_text("BAD", (0, 0), 18)
+
+      # Flash the display red.
+      flash_color = colors.CUBE_RED
+
+    # Do the flash.
+    self.set_background_color(flash_color)
+
+    # Pass it on.
+    message = {"type": "flash", "color": flash_color}
+    self.send_message(side, message)
+    time.sleep(1)
+    message["color"] = colors.SCREEN
+    self.send_message(side, message)
+
+    self.set_background_color(colors.SCREEN)
 
   def on_reconfiguration(self, config):
     # If we connect the checker cube to something, we want to check the current
