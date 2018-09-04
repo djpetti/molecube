@@ -125,13 +125,14 @@ class Cube(object):
     """ Adds a connection from this cube to another one.
     Args:
       other: The cube to connect to.
-      side: The side at which this cube is connected. """
+      side: The side at which this cube is connected.
+    Returns:
+      True if the configuration changed, false otherwise. """
     if self.__connected[side] == other:
       return
 
     self.__connected[side] = other
-    # Report a state change.
-    self.__config_changed_hook()
+    return True
 
   def __clear_connections(self):
     """ Clears all connections to this cube. """
@@ -239,6 +240,32 @@ class Cube(object):
     assert Cube._selected == self
     Cube._selected = None
 
+  def send_message(self, side, message):
+    """ Sends a message to a cube directly connected to this one.
+    Args:
+      side: The side that the recipient is connected on.
+      message: The string message to send. """
+    other = self.__connected[side]
+    if other is None:
+      # Make sure there's something there.
+      raise ValueError("No cube connected on side '%s'." % (side))
+
+    # Pass the message to the cube.
+    other_side = Cube.Sides.opposite(side)
+    other.receive_message(other_side, message)
+
+  def receive_message(self, side, message):
+    """ Receives a message from a connected cube.
+    Args:
+      side: The side that the sender is connected to.
+      message: The string message being received. """
+    if not self.__application:
+      # With no app, the message gets dropped.
+      return
+
+    # Otherwise, pass it to the app.
+    self.__application.on_message_receive(side, message)
+
   def is_near(self, other, threshold=100):
     """ Checks if this cube is near another one.
     Args:
@@ -318,8 +345,12 @@ class Cube(object):
     self.set_pos(new_x, new_y)
 
     # Indicate that we are connected to this cube.
-    self.__add_connection(other, side)
-    other.__add_connection(self, Cube.Sides.opposite(side))
+    self_changed = self.__add_connection(other, side)
+    other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
+    if self_changed:
+      self.__config_changed_hook()
+    if other_changed:
+      other.__config_changed_hook()
 
 
 class Tabletop(object):
