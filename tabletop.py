@@ -1,3 +1,5 @@
+import sys
+
 import colors
 import display
 import event
@@ -155,6 +157,12 @@ class Cube(object):
     """
     return self.__connected.copy()
 
+  def is_side_clear(self, side):
+    """ Checks if a certain side is unconnected on this cube.
+    Args:
+      side: The side to check. """
+    return self.__connected[side] is None
+
   def disconnect(self, side):
     """ Removes a connection from the cube.
     Args:
@@ -238,7 +246,8 @@ class Cube(object):
       threshold: Boundary at which we consider ourselves near.
     Returns:
       None if the two cubes are not near, otherwise it returns the side of this
-      cube that is nearest the other cube. """
+      cube that is nearest the other cube. The second item in the tuple is the
+      raw euclidean distance between the centers of the cubes. """
     # We'll use the bounding boxes on the case rectangles for this check, since
     # they are the biggest.
     my_case = self.__cube_shapes[0]
@@ -249,28 +258,34 @@ class Cube(object):
 
     if (not col_x or not col_y):
       # No collision.
-      return None
+      return (None, None)
 
     my_case_x, my_case_y = my_case.get_pos()
     other_case_x, other_case_y = other_case.get_pos()
     x_dist = abs(my_case_x - other_case_x)
     y_dist = abs(my_case_y - other_case_y)
 
+    # Calculate the raw distance.
+    total_dist = (x_dist ** 2 + y_dist ** 2) ** (0.5)
+
+    side = None
     if y_dist < x_dist:
       if my_case_x > other_case_x:
         # Our left side is colliding.
-        return Cube.Sides.LEFT
+        side = Cube.Sides.LEFT
       else:
         # Our right side is colliding.
-        return Cube.Sides.RIGHT
+        side = Cube.Sides.RIGHT
 
     else:
       if my_case_y > other_case_y:
         # Our top side is colliding.
-        return Cube.Sides.TOP
+        side = Cube.Sides.TOP
       else:
         # Our bottom side is colliding.
-        return Cube.Sides.BOTTOM
+        side = Cube.Sides.BOTTOM
+
+    return (side, total_dist)
 
   def snap(self, other, side):
     """ Snap this cube to another cube.
@@ -332,16 +347,31 @@ class Tabletop(object):
       return
 
     # Check if the cube is near any others.
+    best_dist = sys.maxsize
+    best_side = None
+    best_cube = None
     for cube in self.__cubes:
       if cube == selected_cube:
         # No point in checking ourselves.
         continue
 
-      near_side = selected_cube.is_near(cube)
+      near_side, dist = selected_cube.is_near(cube)
       if near_side is not None:
-        # We are near this cube. Snap to it.
-        selected_cube.snap(cube, near_side)
-        break
+        # We are near this cube.
+        other_side = Cube.Sides.opposite(near_side)
+        if not cube.is_side_clear(other_side):
+          # Something is already connected here. We can't connect here also.
+          continue
+
+        if dist < best_dist:
+          # This cube is the closest so far.
+          best_dist = dist
+          best_side = near_side
+          best_cube = cube
+
+      # Snap to the closest cube.
+      if best_cube:
+        selected_cube.snap(best_cube, best_side)
 
     selected_cube.clear_drag()
 

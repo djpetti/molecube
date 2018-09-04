@@ -1,11 +1,19 @@
 class Application(object):
   """ Represents an application running on a cube. """
 
+  def _start_app(self):
+    """ This is the apps start-up code. It will be run once when it is first
+    started. """
+    return
+
   def run(self, cube):
     """ Runs the application on a particular cube.
     Args:
       cube: A handle to the cube that this app is running on. """
     self.__cube = cube
+
+    # Run init code.
+    self._start_app()
 
   def on_reconfiguration(self, config):
     """ This is a stub method that will be called every time the connection
