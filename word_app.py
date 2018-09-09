@@ -122,13 +122,14 @@ class WordGameChecker(Application):
 
   # Set of valid words.
   _VALID_WORDS = set(["SET", "SEAT", "SEA", "SENT", "NET", "NETS", "TEN",
-                      "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS", "NEAT"])
+                      "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS", "NEAT",
+                      "ANT", "ANTS", "ATE"])
 
   def __reset_display(self):
     """ Resets the display on the checker cube. """
     # Indicate that this is for checking.
     self.clear_display()
-    self.draw_text("Check", (0, 0), 18)
+    self.draw_text("Check", (0, 0), 24)
 
   def _start_app(self):
     self.__reset_display()
@@ -141,7 +142,7 @@ class WordGameChecker(Application):
     if word in WordGameChecker._VALID_WORDS:
       # Word is valid.
       self.clear_display()
-      self.draw_text("GOOD", (0, 0), 18)
+      self.draw_text("GOOD", (0, 0), 24)
 
       # Flash the display gold.
       flash_color = colors.CUBE_GOLD
@@ -149,7 +150,7 @@ class WordGameChecker(Application):
     else:
       # Word is invalid.
       self.clear_display()
-      self.draw_text("BAD", (0, 0), 18)
+      self.draw_text("BAD", (0, 0), 24)
 
       # Flash the display red.
       flash_color = colors.CUBE_RED
