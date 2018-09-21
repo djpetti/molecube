@@ -1,0 +1,2 @@
+# Enable all warnings.
+build --copt -Wall --copt -Werror --copt -Wunused-but-set-parameter
