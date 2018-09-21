@@ -55,3 +55,28 @@ hardware, and the simulator.
 Since the cubes have no wireless networking, application administration is
 handled through the cube's charging base. This is something that will likely be
 done by parents, rather than kids.
+
+## Developing
+
+We welcome contributors. Below are instructions on building and running the
+code.
+
+## Simulator
+
+The simulator can be run as follows:
+
+```
+~$ python simulator/demo_game.py
+```
+
+Make sure that you use Python 2 for this and that you have Tkinter installed.
+
+## Applications and LibMC
+
+To build the applications and library, use [bazel](https://bazel.build/):
+
+```
+bazel build -c dbg ...
+```
+
+All artifacts will be located in the `bazel-out` directory.
