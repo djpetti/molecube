@@ -9,6 +9,10 @@ from cube import Cube
 class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
 
+  GRID_SIZE = Cube.CUBE_SIZE
+  GRID_OFFSET = GRID_SIZE/2
+
+
   def __init__(self):
     # List of cubes.
     self.__cubes = []
@@ -30,37 +34,9 @@ class Tabletop(object):
       # No cube is selected. Do nothing.
       return
 
-    '''
-    # Check if the cube is near any others.
-    best_dist = sys.maxsize
-    best_side = None
-    best_cube = None
-    for cube in self.__cubes:
-      if cube == selected_cube:
-        # No point in checking ourselves.
-        continue
-
-      near_side, dist = selected_cube.is_near(cube)
-      if near_side is not None:
-        # We are near this cube.
-        other_side = Cube.Sides.opposite(near_side)
-        if not cube.is_side_clear(other_side):
-          # Something is already connected here. We can't connect here also.
-          continue
-
-        if dist < best_dist:
-          # This cube is the closest so far.
-          best_dist = dist
-          best_side = near_side
-          best_cube = cube
-
-      # Snap to the closest cube.
-      if best_cube:
-        selected_cube.snap(best_cube, best_side)
-    '''
-
-    selected_cube.snap_to_grid((200, 200), self.__cubes, offset = (100, 100))
-
+    selected_cube.snap_to_grid(Tabletop.GRID_SIZE,
+                               self.__cubes,
+                               offset = Tabletop.GRID_OFFSET)
     selected_cube.clear_drag()
 
   def __mouse_dragged(self, event):

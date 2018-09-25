@@ -21,6 +21,9 @@ class Cube(object):
     TOP = "top"
     BOTTOM = "bottom"
 
+    # List of each side
+    _ALL = {LEFT, RIGHT, BOTTOM, TOP}
+
     # Associates each side with its opposite.
     _OPPOSITES = {LEFT: RIGHT,
                   RIGHT: LEFT,
@@ -50,6 +53,13 @@ class Cube(object):
       Returns:
         Unit vector of the coordinate shift as tuple. """
       return cls._COORDINATES[side]
+
+    @classmethod
+    def all(cls):
+      """ Gets a list of all sides
+      Returns:
+        A list of all sides """
+      return cls._ALL
 
   # Base cube size, in px.
   CUBE_SIZE = 200
@@ -277,95 +287,8 @@ class Cube(object):
 
     # Otherwise, pass it to the app.
     self.__application.on_message_receive(side, message)
-
-  def is_near(self, other, threshold=100):
-    """ Checks if this cube is near another one.
-    Args:
-      other: The cube to check if we are near.
-      threshold: Boundary at which we consider ourselves near.
-    Returns:
-      None if the two cubes are not near, otherwise it returns the side of this
-      cube that is nearest the other cube. The second item in the tuple is the
-      raw euclidean distance between the centers of the cubes. """
-    # We'll use the bounding boxes on the case rectangles for this check, since
-    # they are the biggest.
-    my_case = self.__cube_shapes[0]
-    other_case = other.__cube_shapes[0]
-
-    col_x, col_y = obj_canvas.CanvasObject.check_collision(my_case, other_case,
-                                                           threshold=threshold)
-
-    if (not col_x or not col_y):
-      # No collision.
-      return (None, None)
-
-    my_case_x, my_case_y = my_case.get_pos()
-    other_case_x, other_case_y = other_case.get_pos()
-    x_dist = abs(my_case_x - other_case_x)
-    y_dist = abs(my_case_y - other_case_y)
-
-    # Calculate the raw distance.
-    total_dist = (x_dist ** 2 + y_dist ** 2) ** (0.5)
-
-    side = None
-    if y_dist < x_dist:
-      if my_case_x > other_case_x:
-        # Our left side is colliding.
-        side = Cube.Sides.LEFT
-      else:
-        # Our right side is colliding.
-        side = Cube.Sides.RIGHT
-
-    else:
-      if my_case_y > other_case_y:
-        # Our top side is colliding.
-        side = Cube.Sides.TOP
-      else:
-        # Our bottom side is colliding.
-        side = Cube.Sides.BOTTOM
-
-    return (side, total_dist)
-
-  # ** Deprecated in favor of snap_to_grid **
-  def snap(self, other, side):
-    """ Snap this cube to another cube.
-    Args:
-      other: The cube to snap to.
-      side: The side of this cube to snap on. """
-    # Align the cubes in the display.
-    other_x, other_y = other.get_pos()
-    new_x = None
-    new_y = None
-
-    if side in (Cube.Sides.LEFT, Cube.Sides.RIGHT):
-      # We need to align the y-axis.
-      new_y = other.get_pos()[1]
-    else:
-      # We need to align the x-axis.
-      new_x = other.get_pos()[0]
-
-    # Make sure the sides are touching.
-    size = Cube.CUBE_SIZE
-    if side == Cube.Sides.LEFT:
-      new_x = other_x + size
-    elif side == Cube.Sides.RIGHT:
-      new_x = other_x - size
-    elif side == Cube.Sides.TOP:
-      new_y = other_y + size
-    else:
-      new_y = other_y - size
-
-    self.set_pos(new_x, new_y)
-
-    # Indicate that we are connected to this cube.
-    self_changed = self.__add_connection(other, side)
-    other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
-    if self_changed:
-      self.__config_changed_hook()
-    if other_changed:
-      other.__config_changed_hook()
   
-  def snap_to_grid(self, grid_size, others, offset = (0, 0)):
+  def snap_to_grid(self, grid_size, others, offset = 0):
     """ Snap this cube to grid.
       Args:
         grid_size: pixel size of grid as (w, h)
@@ -374,14 +297,15 @@ class Cube(object):
 
     # Snap to proper position
     old_pos = self.get_pos()
-    new_x = old_pos[0] - old_pos[0]%grid_size[0]+offset[0]
-    new_y = old_pos[1] - old_pos[1]%grid_size[1]+offset[1]
+    new_x = old_pos[0] - old_pos[0] % grid_size + offset
+    new_y = old_pos[1] - old_pos[1] % grid_size + offset
 
     self.set_pos(new_x, new_y)
 
     # Check for cubes to snap for on each side
-    for side in [Cube.Sides.LEFT, Cube.Sides.RIGHT, Cube.Sides.TOP, Cube.Sides.BOTTOM]:
+    for side in Cube.Sides.all():
       shift = Cube.Sides.coordinates(side)
+      shift = (shift[0]*grid_size, shift[1]*grid_size)
 
       # for each cube
       for other in others:
@@ -389,7 +313,7 @@ class Cube(object):
         my_x, my_y = self.get_pos() 
 
         # If other cube is adjacent, add connection
-        if other_x == my_x + shift[0]*grid_size[0] and other_y == my_y + shift[1]*grid_size[1]:
+        if other_x == my_x + shift[0] and other_y == my_y + shift[1]:
           self_changed = self.__add_connection(other, side)
           other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
           if self_changed:

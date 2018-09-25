@@ -123,7 +123,7 @@ class WordGameChecker(Application):
   # Set of valid words.
   _VALID_WORDS = set(["SET", "SEAT", "SEA", "SENT", "NET", "NETS", "TEN",
                       "TENS", "SAT", "TEA", "TEAS", "EAT", "EATS", "NEAT",
-                      "ANT", "ANTS", "ATE"])
+                      "ANT", "ANTS", "ATE", "NEST"])
 
   def __reset_display(self):
     """ Resets the display on the checker cube. """
