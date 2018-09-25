@@ -305,7 +305,7 @@ class Cube(object):
     # Check for cubes to snap for on each side
     for side in Cube.Sides.all():
       shift = Cube.Sides.coordinates(side)
-      shift = (shift[0]*grid_size, shift[1]*grid_size)
+      shift = (shift[0] * grid_size, shift[1] * grid_size)
 
       # for each cube
       for other in others:
