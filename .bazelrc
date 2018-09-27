@@ -1,2 +1,20 @@
+# Cube target configuration.
+build:cube --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:cube --crosstool_top=//tools/arm_compiler:toolchain
+build:cube --cpu=armeabi-v7a
+build:cube --target_environment=//cpus:arm
+
+# Local target configuration.
+build:local --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:local --crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:local --cpu=k8
+build:local --target_environment=//cpus:x86
+
+# Always show test errors.
+test --test_output=errors
+# Build 32-bit tests, since some code assumes it's being run on a 32-bit
+# platform. Also, disable warnings about the naked attribute, which is largely
+# irrelevant for testing.
+test --copt -m32 --linkopt -m32 --copt -Wno-attributes
 # Enable all warnings.
 build --copt -Wall --copt -Werror --copt -Wunused-but-set-parameter

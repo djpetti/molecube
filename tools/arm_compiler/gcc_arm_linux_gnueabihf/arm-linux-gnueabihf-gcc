@@ -1,0 +1,6 @@
+#!/bin/bash --norc
+
+PATH="external/arm_gcc_linux_toolchain/libexec/gcc/arm-linux-gnueabihf/8.2.1:$PATH" \
+  exec \
+  external/arm_gcc_linux_toolchain/bin/arm-linux-gnueabihf-gcc \
+  "$@"
