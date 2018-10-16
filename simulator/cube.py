@@ -287,31 +287,29 @@ class Cube(object):
 
     # Otherwise, pass it to the app.
     self.__application.on_message_receive(side, message)
-  
+
   def snap_to_grid(self, grid_size, others, offset = 0):
     """ Snap this cube to grid.
       Args:
         grid_size: pixel size of grid as (w, h)
         others: List of other cubes the current cube can snap to
         offsest: offset of the snap grid in pixels (x, y) """
-	
+
     # Snap to proper position
     old_pos = self.get_pos()
     new_x = old_pos[0] - old_pos[0] % grid_size + offset
     new_y = old_pos[1] - old_pos[1] % grid_size + offset
-	
-	#makes sure no cube is in the way, moves the cube if so
-    x = 0
-    while x == 0:
-	  x=1
-	  for other in others:
-           other_x, other_y = other.get_pos()
-           if (other_x == new_x and other_y == new_y):
-            new_x +=200
-            x = 0		  
 
-	
-		
+    #makes sure no cube is in the way, moves the cube if so
+    updated = False
+    while not updated:
+      updated = True
+      for other in others:
+        other_x, other_y = other.get_pos()
+        if (other_x == new_x and other_y == new_y):
+          new_x += 200
+          updated = False
+
     self.set_pos(new_x, new_y)
 
     # Check for cubes to snap for on each side
@@ -322,7 +320,7 @@ class Cube(object):
       # for each cube
       for other in others:
         other_x, other_y = other.get_pos()
-        my_x, my_y = self.get_pos() 
+        my_x, my_y = self.get_pos()
 
         # If other cube is adjacent, add connection
         if other_x == my_x + shift[0] and other_y == my_y + shift[1]:
