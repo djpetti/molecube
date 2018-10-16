@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message Person {
+  // If set to true, specifies that we want to shut down the VM.
+  bool shut_down = 1;
+}
