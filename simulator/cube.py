@@ -294,12 +294,24 @@ class Cube(object):
         grid_size: pixel size of grid as (w, h)
         others: List of other cubes the current cube can snap to
         offsest: offset of the snap grid in pixels (x, y) """
-
+	
     # Snap to proper position
     old_pos = self.get_pos()
     new_x = old_pos[0] - old_pos[0] % grid_size + offset
     new_y = old_pos[1] - old_pos[1] % grid_size + offset
+	
+	#makes sure no cube is in the way, moves the cube if so
+    x = 0
+    while x == 0:
+	  x=1
+	  for other in others:
+           other_x, other_y = other.get_pos()
+           if (other_x == new_x and other_y == new_y):
+            new_x +=200
+            x = 0		  
 
+	
+		
     self.set_pos(new_x, new_y)
 
     # Check for cubes to snap for on each side
