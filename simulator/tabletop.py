@@ -12,10 +12,11 @@ class Tabletop(object):
   GRID_SIZE = Cube.CUBE_SIZE
   GRID_OFFSET = GRID_SIZE/2
 
-
   def __init__(self):
     # List of cubes.
     self.__cubes = []
+    self.__grid = []
+    self.__drawngrid = False
 
     # Canvas on which to draw cubes.
     self.__canvas = obj_canvas.Canvas()
@@ -33,11 +34,12 @@ class Tabletop(object):
     if selected_cube is None:
       # No cube is selected. Do nothing.
       return
-
     selected_cube.snap_to_grid(Tabletop.GRID_SIZE,
                                self.__cubes,
                                offset = Tabletop.GRID_OFFSET)
     selected_cube.clear_drag()
+    self.__canvas.clear_grid(self.__grid)
+    self.__drawngrid = False
 
   def __mouse_dragged(self, event):
     """ Called when the user drags with the mouse. """
@@ -48,6 +50,9 @@ class Tabletop(object):
       return
 
     # Move the cube.
+    if (self.__drawngrid == False):
+      self.__grid = self.__canvas.draw_grid()
+      self.__drawngrid = True
     selected_cube.drag(event)
 
   def make_cube(self, color=Cube.Colors.RED):
