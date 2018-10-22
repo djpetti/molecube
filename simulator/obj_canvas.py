@@ -154,7 +154,38 @@ class Canvas(GuiObject):
     Args:
       color: The color to set it to. """
     self.__canvas.config(bg=color)
-
+  def draw_grid(self):
+    grid = []
+    id = self.__canvas.create_line(200,0,200,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(400,0,400,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(600,0,600,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(800,0,800,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(1000,0,1000,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(1200,0,1200,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(1400,0,1400,1000)
+    grid.append(id)
+    id = self.__canvas.create_line(0,200,1600,200)
+    grid.append(id)
+    id = self.__canvas.create_line(0,400,1600,400)
+    grid.append(id)
+    id = self.__canvas.create_line(0,600,1600,600)
+    grid.append(id)
+    id = self.__canvas.create_line(0,800,1600,800)
+    grid.append(id)
+    id = self.__canvas.create_line(0,1000,1600,1000)
+    grid.append(id)
+    return grid
+  def clear_grid(self, grid):
+    for i in grid:
+      self.__canvas.delete(i)
+   
+    
 
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
