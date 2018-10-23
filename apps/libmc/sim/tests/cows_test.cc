@@ -61,6 +61,9 @@ class CowsTest : public ::testing::Test {
 
   // Large buffer for testing purposes.
   uint16_t *test_buffer_;
+
+  // Cows implementation for testing.
+  Cows cows_;
 };
 
 // Make sure we can stuff and unstuff something.
@@ -70,15 +73,13 @@ TEST_F(CowsTest, StuffUnstuffTest) {
   memcpy(test_buffer_copy, test_buffer_, sizeof(uint16_t) * kBufferSize);
 
   // Stuff it.
-  CowsStuff(test_buffer_, kBufferSize);
+  cows_.CowsStuff(test_buffer_, kBufferSize);
 
-  // The packet separator should have been added.
-  EXPECT_EQ(0, test_buffer_[0]);
   // Check that we don't have extraneous zeros.
   CheckInternalSeparators(test_buffer_, kBufferSize);
 
   // Unstuff it.
-  CowsUnstuff(test_buffer_, kBufferSize);
+  cows_.CowsUnstuff(test_buffer_, kBufferSize);
 
   // Check that it's the same.
   ComparePackets(test_buffer_, test_buffer_copy, kBufferSize);
@@ -89,7 +90,7 @@ TEST_F(CowsTest, StuffUnstuffTest) {
 // Make sure we can stuff and unstuff a packet with no zeros.
 TEST_F(CowsTest, NoZerosTest) {
   // Stuff the packet, which by definition removes the zeros.
-  CowsStuff(test_buffer_, kBufferSize);
+  cows_.CowsStuff(test_buffer_, kBufferSize);
   CheckInternalSeparators(test_buffer_, kBufferSize);
 
   // Copy the testing buffer so we have something to compare with.
@@ -97,14 +98,14 @@ TEST_F(CowsTest, NoZerosTest) {
   memcpy(test_buffer_copy, test_buffer_, sizeof(uint16_t) * kBufferSize);
 
   // Stuff it again.
-  CowsStuff(test_buffer_, kBufferSize);
+  cows_.CowsStuff(test_buffer_, kBufferSize);
   CheckInternalSeparators(test_buffer_, kBufferSize);
 
   // Make sure that the next zero word points to the start of the next packet.
-  EXPECT_EQ(kBufferSize - 1, test_buffer_[1]);
+  EXPECT_EQ(kBufferSize - 1, test_buffer_[0]);
 
   // Unstuff it.
-  CowsUnstuff(test_buffer_, kBufferSize);
+  cows_.CowsUnstuff(test_buffer_, kBufferSize);
   // Check that it's the same.
   ComparePackets(test_buffer_, test_buffer_copy, kBufferSize);
 
@@ -121,11 +122,11 @@ TEST_F(CowsTest, ZeroPacketTest) {
   memcpy(test_buffer_copy, test_buffer_, sizeof(uint16_t) * kBufferSize);
 
   // Stuff it.
-  CowsStuff(test_buffer_, kBufferSize);
+  cows_.CowsStuff(test_buffer_, kBufferSize);
   CheckInternalSeparators(test_buffer_, kBufferSize);
 
   // Unstuff it.
-  CowsUnstuff(test_buffer_, kBufferSize);
+  cows_.CowsUnstuff(test_buffer_, kBufferSize);
   // Check that it's the same.
   ComparePackets(test_buffer_, test_buffer_copy, kBufferSize);
 

@@ -41,3 +41,17 @@ cc_test(
   size = "small",
   restricted_to = ["//cpus:x86"],
 )
+
+cc_test(
+  name = "simulator_com_test",
+  copts = ["-Iexternal/gtest/googletest/include",
+           "-Iexternal/gtest/googlemock/include"],
+  srcs = ["simulator_com_test.cc"],
+  deps = [":mocks",
+          "//apps/libmc/sim",
+          "//apps/libmc/sim/protobuf:cc_test",
+          "@gtest//:gtest",
+          "@gtest//:gmock"],
+  size = "small",
+  restricted_to = ["//cpus:x86"],
+)

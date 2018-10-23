@@ -4,12 +4,13 @@
 #include <stdint.h>
 
 #include "linux_serial_interface.h"
+#include "serial_link_interface.h"
 
 namespace libmc {
 namespace sim {
 
 // Manages low-level communication on the serial link with the simulation host.
-class SerialLink {
+class SerialLink : public SerialLinkInterface {
  public:
   // Default constructor should be used normally.
   SerialLink();
@@ -18,32 +19,14 @@ class SerialLink {
   // Args:
   //  os_serial: The OS serial interface layer to use.
   SerialLink(LinuxSerialInterface *os_serial);
-  ~SerialLink();
+  virtual ~SerialLink();
 
-  // Initializes the serial link.
-  // Args:
-  //  device: The serial device to communicate on.
-  //  baud: The baudrate to use for communication.
-  // Returns:
-  //  True if opening the connection succeeded, false otherwise.
-  bool Open(const char *device, uint32_t baud);
-  // Returns true if the link is open, false otherwise.
-  bool IsOpen();
+  virtual bool Open(const char *device, uint32_t baud);
+  virtual bool IsOpen();
 
-  // Send a message on the serial device.
-  // Args:
-  //  message: The message to send.
-  //  length: The length of the message.
-  // Returns:
-  //  True if sending the message was successful, false otherwise.
-  bool SendMessage(const uint8_t *message, uint32_t length);
-  // Receive a message from the serial device.
-  // Args:
-  //  message: Where to write the received message.
-  //  length: The length of the message to receive.
-  // Returns:
-  //  True if the message was successfully received, false otherwise
-  bool ReceiveMessage(uint8_t *message, uint32_t length);
+  virtual bool SendMessage(const uint8_t *message, uint32_t length);
+  virtual bool ReceiveMessage(uint8_t *message, uint32_t length);
+  virtual int32_t ReceivePartialMessage(uint8_t *message, uint32_t length);
 
  private:
   // Configures the internal serial link.

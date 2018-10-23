@@ -150,7 +150,7 @@ TEST_F(SerialLinkPtyTest, MessageReceiveTest) {
   ASSERT_TRUE(WriteMessage(message));
 
   // Try receiving it.
-  const uint32_t length = strlen(message) + 1;
+  const int32_t length = strlen(message) + 1;
   uint8_t *received = new uint8_t[length];
   EXPECT_TRUE(link_.ReceiveMessage(received, length));
 
@@ -159,6 +159,25 @@ TEST_F(SerialLinkPtyTest, MessageReceiveTest) {
 
   delete[] received;
 }
+
+// Same as the above, but tests with a partial message.
+TEST_F(SerialLinkPtyTest, PartialMessageReceiveTest) {
+  // Add some stuff to receive.
+  const char *message = "Shirley is a lizard person.";
+  ASSERT_TRUE(WriteMessage(message));
+
+  // Try receiving it.
+  const int32_t length = strlen(message) + 1;
+  uint8_t *received = new uint8_t[length + 1];
+  // Try to receive something longer. It should only receive what it has.
+  EXPECT_EQ(length, link_.ReceivePartialMessage(received, length + 1));
+
+  // Compare the messages.
+  EXPECT_EQ(0, memcmp(message, received, length));
+
+  delete[] received;
+}
+
 
 }  // namespace testing
 }  // namespace sim

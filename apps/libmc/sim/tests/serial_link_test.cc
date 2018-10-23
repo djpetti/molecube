@@ -24,6 +24,7 @@ const uint32_t kBaud = 115200;
 using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SetArrayArgument;
+using ::testing::StrictMock;
 using ::testing::_;
 
 // Tests for the serial link class.
@@ -60,7 +61,7 @@ class SerialLinkTest : public ::testing::Test {
   }
 
   // Serial link mocks.
-  MockLinuxSerial mock_serial_;
+  StrictMock<MockLinuxSerial> mock_serial_;
 
   // Serial link class to use for testing.
   SerialLink serial_;
@@ -176,7 +177,7 @@ TEST_F(SerialLinkTest, ReceiveMessageTest) {
   const uint8_t *byte_ex_message =
       reinterpret_cast<const uint8_t *>(expected_message);
 
-  // Make it look like writing succeeded on the first try.
+  // Make it look like reading succeeded on the first try.
   EXPECT_CALL(mock_serial_, Read(kFd, message, length))
       .Times(1)
       .WillOnce(
@@ -221,7 +222,7 @@ TEST_F(SerialLinkTest, ReceiveMessageSplitTest) {
 }
 
 // Tests that ReceiveMessage handles a read failure.
-TEST_F(SerialLinkTest, SendMessageReadFailureTest) {
+TEST_F(SerialLinkTest, ReceiveMessageReadFailureTest) {
   OpenSerial();
 
   // Message to test with.
@@ -235,6 +236,49 @@ TEST_F(SerialLinkTest, SendMessageReadFailureTest) {
 
   // Receiving the message should fail now.
   EXPECT_FALSE(serial_.ReceiveMessage(message, length));
+}
+
+// Tests that ReceivePartialMessage works under normal conditions.
+TEST_F(SerialLinkTest, ReceivePartialMessageTest) {
+  OpenSerial();
+
+  // Message to test with.
+  const char *expected_message = "poptart";
+  const uint32_t length = strlen(expected_message) + 1;
+  uint8_t message[length];
+  const uint8_t *byte_ex_message =
+      reinterpret_cast<const uint8_t *>(expected_message);
+
+  // Make it look like reading succeeded on the first try.
+  EXPECT_CALL(mock_serial_, Read(kFd, message, length))
+      .Times(1)
+      .WillOnce(
+          DoAll(SetArrayArgument<1>(byte_ex_message, byte_ex_message + length),
+          Return(length)));
+
+  EXPECT_EQ(static_cast<int32_t>(length),
+            serial_.ReceivePartialMessage(message, length));
+
+  // Make sure the messages match.
+  EXPECT_EQ(0,
+            strcmp(expected_message, reinterpret_cast<const char *>(message)));
+}
+
+// Tests that ReceivePartialMessage handles a read failure.
+TEST_F(SerialLinkTest, ReceivePartialMessageReadFailureTest) {
+  OpenSerial();
+
+  // Message to test with.
+  const uint32_t length = 32;
+  uint8_t message[length];
+
+  // Make it look like reading the message failed.
+  EXPECT_CALL(mock_serial_, Read(kFd, message, length))
+      .Times(1)
+      .WillOnce(Return(-1));
+
+  // Receiving the message should fail now.
+  EXPECT_EQ(-1, serial_.ReceivePartialMessage(message, length));
 }
 
 int main(int argc, char **argv) {

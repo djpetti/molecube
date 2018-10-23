@@ -118,5 +118,11 @@ bool SerialLink::ReceiveMessage(uint8_t *message, uint32_t length) {
   return true;
 }
 
+int32_t SerialLink::ReceivePartialMessage(uint8_t *message,
+                                          uint32_t max_length) {
+  // For receiving, we're fine with reading a partial message.
+  return os_->Read(serial_, message, max_length);
+}
+
 }  // namespace sim
 }  // namespace libmc
