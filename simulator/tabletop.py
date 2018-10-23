@@ -13,6 +13,7 @@ class Tabletop(object):
   GRID_WIDTH, GRID_HEIGHT = 8, 4
   GRID_OFFSET = GRID_SIZE / 2
 
+  
   def __init__(self):
     # List of cubes.
     self.__cubes = [[None for x in range(Tabletop.GRID_WIDTH)]
@@ -33,6 +34,7 @@ class Tabletop(object):
     if selected_cube is None:
       # No cube is selected. Do nothing.
       return
+
     selected_cube.snap_to_grid(Tabletop.GRID_SIZE,
                                self.__cubes,
                                offset = Tabletop.GRID_OFFSET)
