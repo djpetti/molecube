@@ -157,8 +157,7 @@ class Canvas(GuiObject):
   
   def add_line(self, x_1, y_1, x_2, y_2):
     return self.__canvas.create_line( x_1, y_1, x_2, y_2)
-    
-   
+
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
 
