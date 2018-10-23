@@ -37,6 +37,8 @@ class Tabletop(object):
                                self.__cubes,
                                offset = Tabletop.GRID_OFFSET)
     selected_cube.clear_drag()
+    self.clear_grid()
+    self.__drawngrid = False
 
   def __mouse_dragged(self, event):
     """ Called when the user drags with the mouse. """
@@ -47,6 +49,9 @@ class Tabletop(object):
       return
 
     # Move the cube.
+    if (self.__drawngrid == False):
+      self.__grid = self.draw_grid()
+      self.__drawngrid = True
     selected_cube.drag(event)
 
   def make_cube(self, color=Cube.Colors.RED):
@@ -77,3 +82,24 @@ class Tabletop(object):
   def run(self):
     """ Runs the tabletop simulation indefinitely. """
     self.__canvas.wait_for_events()
+  
+  def draw_grid(self):
+    grid = []
+    window_x, window_y = self.__canvas.get_window_size()
+    i = 0 
+    while i < window_x:
+      id = self.__canvas.add_line( i, 0, i, window_y)
+      grid.append(id)
+      i+=200
+    j = 0
+    while j < window_y:
+      id = self.__canvas.add_line(0, j, window_x, j)
+      grid.append(id)
+      j+=200
+    return grid
+    
+  def clear_grid(self):
+    for i in range(len(self.__grid)):
+      id = self.__grid.pop()
+      self.__canvas.delete_object(id)
+   
