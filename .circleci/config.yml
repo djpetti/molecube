@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    working_directory: /molecube
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build application docker image.
+          command: |
+            docker build -t molecube containers/ci/
+      - run:
+          name: Run Python tests.
+          command: |
+            ./run_in_container.sh "./run_tests.py"
+      - run:
+          name: Build and run C++ tests.
+          command: |
+            ./run_in_container.sh "bazel test ..."
