@@ -4,6 +4,7 @@ FROM ubuntu:18.04
 RUN apt-get update && \
     apt-get install -y git python build-essential pkg-config zip zlib1g-dev \
                        unzip qemu-system-arm wget python-pip g++-multilib
+
 # Install python dependencies.
 RUN pip install mock
 
