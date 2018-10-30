@@ -13,10 +13,6 @@ jobs:
           command: |
             docker build -t molecube containers/ci/
       - run:
-          name: Run Python tests.
-          command: |
-            ./run_in_container.sh "./run_tests.py"
-      - run:
-          name: Build and run C++ tests.
+          name: Build and run tests.
           command: |
             ./run_in_container.sh "bazel test ..."

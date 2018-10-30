@@ -66,7 +66,7 @@ code.
 The simulator can be run as follows:
 
 ```
-~$ python simulator/demo_game.py
+~$ bazel run //simulator:demo_game
 ```
 
 Make sure that you use Python 2 for this and that you have Tkinter installed.
