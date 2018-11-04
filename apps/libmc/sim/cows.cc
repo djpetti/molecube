@@ -22,14 +22,14 @@ void Cows::CowsStuff(uint16_t *buffer, uint16_t length) {
   }
 
   // Fill in the overhead byte.
-  buffer[0] = last_zero - (buffer + 1);
+  buffer[0] = last_zero - buffer;
 }
 
 void Cows::CowsUnstuff(uint16_t *buffer, uint16_t length) {
   assert(length >= 1 && "Length must be at least 1.");
 
   // Location of first zero is notated in word 0.
-  uint16_t *next_zero = buffer + 1 + buffer[0];
+  uint16_t *next_zero = buffer + buffer[0];
 
   // Make a single forward pass to replace all the zeroes.
   while (next_zero < buffer + length) {

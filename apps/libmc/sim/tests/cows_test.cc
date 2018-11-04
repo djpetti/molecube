@@ -102,7 +102,7 @@ TEST_F(CowsTest, NoZerosTest) {
   CheckInternalSeparators(test_buffer_, kBufferSize);
 
   // Make sure that the next zero word points to the start of the next packet.
-  EXPECT_EQ(kBufferSize - 1, test_buffer_[0]);
+  EXPECT_EQ(kBufferSize, test_buffer_[0]);
 
   // Unstuff it.
   cows_.CowsUnstuff(test_buffer_, kBufferSize);
