@@ -11,3 +11,11 @@ py_test(
   deps = ["//simulator/virtual_cube"],
   size = "small",
 )
+
+py_test(
+  name = "test_serial_com",
+  srcs = ["test_serial_com.py"],
+  deps = ["//simulator/virtual_cube:virtual_cube_no_imports",
+          "//apps/libmc/sim/protobuf:all"],
+  size = "small",
+)

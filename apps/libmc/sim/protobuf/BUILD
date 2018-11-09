@@ -27,3 +27,9 @@ cc_proto_library(
   name = "cc_test",
   deps = [":test"],
 )
+
+python_proto_library(
+  name = "all",
+  deps = [":system_action",
+          ":test"],
+)
