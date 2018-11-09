@@ -4,18 +4,18 @@ load("@build_stack_rules_proto//python:python_proto_library.bzl",
      "python_proto_library")
 
 proto_library(
-  name = "system_action",
-  srcs = ["system_action.proto"],
+  name = "sim_message",
+  srcs = ["sim_message.proto"],
 )
 
 cc_proto_library(
-  name = "cc_system_action",
-  deps = [":system_action"],
+  name = "cc_sim_message",
+  deps = [":sim_message"],
 )
 
 python_proto_library(
-  name = "python_system_action",
-  deps = [":system_action"],
+  name = "python_sim_message",
+  deps = [":sim_message"],
 )
 
 proto_library(
@@ -30,6 +30,6 @@ cc_proto_library(
 
 python_proto_library(
   name = "all",
-  deps = [":system_action",
+  deps = [":sim_message",
           ":test"],
 )

@@ -127,7 +127,7 @@ class TestSerialCom(unittest.TestCase):
     mocked_serial.assert_has_calls(expected_calls)
 
   @mock.patch("simulator.virtual_cube.cows.cows_unstuff")
-  @mock.patch("apps.libmc.sim.protobuf.system_action_pb2.SystemAction")
+  @mock.patch("apps.libmc.sim.protobuf.sim_message_pb2.SimMessage")
   def test_read_message(self, mocked_sys_action, mocked_cows):
     """ Tests that we can read a message under normal conditions. """
     # Create the message to read.
@@ -171,7 +171,7 @@ class TestSerialCom(unittest.TestCase):
     self.assertEqual(message, got_message)
 
   @mock.patch("simulator.virtual_cube.cows.cows_unstuff")
-  @mock.patch("apps.libmc.sim.protobuf.system_action_pb2.SystemAction")
+  @mock.patch("apps.libmc.sim.protobuf.sim_message_pb2.SimMessage")
   def test_read_message_split(self, mocked_sys_action, mocked_cows):
     """ Tests that we can read a message when it is split across multiple read
     calls. """
@@ -224,7 +224,7 @@ class TestSerialCom(unittest.TestCase):
     self.assertEqual(message, got_message)
 
   @mock.patch("simulator.virtual_cube.cows.cows_unstuff")
-  @mock.patch("apps.libmc.sim.protobuf.system_action_pb2.SystemAction")
+  @mock.patch("apps.libmc.sim.protobuf.sim_message_pb2.SimMessage")
   def test_read_message_buffered(self, mocked_sys_action, mocked_cows):
     """ Tests that we can read a message when we get an extra buffered one. """
     # Create two messages to read.
@@ -293,7 +293,7 @@ class TestSerialCom(unittest.TestCase):
     self.assertEqual(message2, got_message2)
 
   @mock.patch("simulator.virtual_cube.cows.cows_unstuff")
-  @mock.patch("apps.libmc.sim.protobuf.system_action_pb2.SystemAction")
+  @mock.patch("apps.libmc.sim.protobuf.sim_message_pb2.SimMessage")
   def test_read_message_continued(self, mocked_sys_action, mocked_cows):
     """ Tests that we can read a message when we read part of the next one. """
     # Create two messages to read.
@@ -369,7 +369,7 @@ class TestSerialCom(unittest.TestCase):
     self.assertEqual(message2, got_message2)
 
   @mock.patch("simulator.virtual_cube.cows.cows_unstuff")
-  @mock.patch("apps.libmc.sim.protobuf.system_action_pb2.SystemAction")
+  @mock.patch("apps.libmc.sim.protobuf.sim_message_pb2.SimMessage")
   def test_sync_to_packet(self, mocked_sys_action, mocked_cows):
     """ Tests that we can successfully synchronize to the packet boundary when
     it requires multiple tries. """

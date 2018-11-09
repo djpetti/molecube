@@ -3,7 +3,7 @@ import logging
 
 import serial
 
-from apps.libmc.sim.protobuf import system_action_pb2
+from apps.libmc.sim.protobuf import sim_message_pb2
 
 import cows
 
@@ -120,7 +120,7 @@ class SerialCom(object):
     # Unstuff the message.
     cows.cows_unstuff(bin_message)
     # Deserialize the message.
-    message = system_action_pb2.SystemAction()
+    message = sim_message_pb2.SimMessage()
     message.ParseFromString(bin_message)
 
     logger.debug("Read message: %s" % (str(message)))
