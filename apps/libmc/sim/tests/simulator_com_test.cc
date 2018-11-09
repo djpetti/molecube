@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 #include "apps/libmc/constants.h"
 #include "apps/libmc/sim/protobuf/test.pb.h"
@@ -55,14 +55,14 @@ MATCHER_P2(BinMessageValid, message, length, "") {
 // Packet separator value.
 const uint8_t kSeparator[] = {0, 0};
 
-}
+}  // namespace
 
+using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SetArrayArgument;
 using ::testing::StrEq;
 using ::testing::StrictMock;
-using ::testing::_;
 
 // Tests for the SimulatorCom class.
 class SimulatorComTest : public ::testing::Test {
@@ -294,8 +294,10 @@ TEST_F(SimulatorComTest, ReceiveMessageMultiMessageTest) {
 
   uint8_t *unstuffed_packet1 = new uint8_t[padded_length1];
   uint8_t *unstuffed_packet2 = new uint8_t[padded_length2];
-  ASSERT_TRUE(message1.SerializeToArray(unstuffed_packet1 + 2, message1_length));
-  ASSERT_TRUE(message2.SerializeToArray(unstuffed_packet2 + 2, message2_length));
+  ASSERT_TRUE(
+      message1.SerializeToArray(unstuffed_packet1 + 2, message1_length));
+  ASSERT_TRUE(
+      message2.SerializeToArray(unstuffed_packet2 + 2, message2_length));
 
   // Create fake packets that looks like stuffed versions of the
   // real ones. It never actually tries to read the packet without un-stuffing
@@ -350,7 +352,8 @@ TEST_F(SimulatorComTest, ReceiveMessageMultiMessageTest) {
   delete[] unstuffed_packet2;
 }
 
-// Tests that we can parse multiple messages when they are received in one burst.
+// Tests that we can parse multiple messages when they are received in one
+// burst.
 TEST_F(SimulatorComTest, ReceiveMessageBlockTest) {
   SetUpPacketSync();
 
@@ -372,8 +375,10 @@ TEST_F(SimulatorComTest, ReceiveMessageBlockTest) {
 
   uint8_t *unstuffed_packet1 = new uint8_t[padded_length1];
   uint8_t *unstuffed_packet2 = new uint8_t[padded_length2];
-  ASSERT_TRUE(message1.SerializeToArray(unstuffed_packet1 + 2, message1_length));
-  ASSERT_TRUE(message2.SerializeToArray(unstuffed_packet2 + 2, message2_length));
+  ASSERT_TRUE(
+      message1.SerializeToArray(unstuffed_packet1 + 2, message1_length));
+  ASSERT_TRUE(
+      message2.SerializeToArray(unstuffed_packet2 + 2, message2_length));
 
   // Create fake packets that looks like stuffed versions of the
   // real ones. It never actually tries to read the packet without un-stuffing
@@ -463,11 +468,17 @@ TEST_F(SimulatorComTest, SyncToPacketTest) {
   // Make it look like it found the packet on its second try.
   const uint8_t non_separator[] = {1, 1};
   EXPECT_CALL(mock_serial_, ReceiveMessage(_, 2))
-      .Times(2)
+      .Times(1)
       .WillOnce(DoAll(SetArrayArgument<0>(non_separator, non_separator + 2),
+                      Return(true)));
+  EXPECT_CALL(mock_serial_, ReceiveMessage(_, 1))
+      .Times(3)
+      .WillOnce(DoAll(SetArrayArgument<0>(non_separator, non_separator + 1),
                       Return(true)))
       .WillOnce(
-          DoAll(SetArrayArgument<0>(kSeparator, kSeparator + 2), Return(true)));
+          DoAll(SetArrayArgument<0>(kSeparator, kSeparator + 1), Return(true)))
+      .WillOnce(DoAll(SetArrayArgument<0>(kSeparator + 1, kSeparator + 2),
+                      Return(true)));
 
   // For the sake of convenience, we're going to make it look like reading the
   // actual packet failed, just so we don't have to mock everything.

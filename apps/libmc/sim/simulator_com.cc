@@ -136,22 +136,25 @@ bool SimulatorCom::ReceiveMessage(ProtoMessage *message) {
 }
 
 bool SimulatorCom::SyncToPacket() {
+  const uint8_t expected[] = {0, 0};
   uint8_t separator[2];
 
+  if (!serial_->ReceiveMessage(separator, 2)) {
+    return false;
+  }
+
   // Read words until we find the separator.
-  while (true) {
-    if (!serial_->ReceiveMessage(separator, 2)) {
+  while (memcmp(expected, separator, 2)) {
+    // Shift by one so we don't miss any possible framings.
+    separator[0] = separator[1];
+
+    if (!serial_->ReceiveMessage(separator + 1, 1)) {
       // Reading failure.
       return false;
     }
-
-    // Compare the separator.
-    const uint8_t expected[] = {0, 0};
-    if (memcmp(expected, separator, 2) == 0) {
-      // We found the packet start.
-      return true;
-    }
   }
+
+  return true;
 }
 
 uint32_t SimulatorCom::FindPacketEnd(uint32_t start) {
