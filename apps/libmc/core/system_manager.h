@@ -1,16 +1,17 @@
 #ifndef LIBMC_CORE_SYSTEM_MANAGER_H_
 #define LIBMC_CORE_SYSTEM_MANAGER_H_
 
+#include "system_manager_interface.h"
+
 namespace libmc {
 namespace core {
 
 // Defines functionality for managing the system at a high level.
-class SystemManager {
+class SystemManager : public SystemManagerInterface {
  public:
-  // Instructs the cube to shut down immediately.
-  // Returns:
-  //  True if it succeeded, false otherwise.
-  bool ShutDown();
+  virtual ~SystemManager() = default;
+
+  virtual bool Shutdown();
 };
 
 }  // namespace core

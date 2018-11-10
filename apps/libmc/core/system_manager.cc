@@ -7,7 +7,7 @@
 namespace libmc {
 namespace core {
 
-bool SystemManager::ShutDown() {
+bool SystemManager::Shutdown() {
   // Flush any buffers to disk.
   sync();
 

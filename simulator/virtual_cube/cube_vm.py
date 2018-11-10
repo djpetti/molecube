@@ -32,6 +32,8 @@ class CubeVm(object):
     # Assign a name for the serial port.
     self.__serial_name = "cube%d" % (self.__id)
 
+    # Manages communication over the serial link.
+
     # Extract the disk image if necessary.
     self.__extract_disk_image()
 
@@ -72,6 +74,9 @@ class CubeVm(object):
     self.__process = subprocess.Popen(command, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE)
     logger.info("Started cube VM %d." % (self.__id))
+
+    # Create the serial link manager.
+    #self.__serial = serial_com.SerialCom(self.get_serial())
 
   def stop(self):
     """ Halts the cube VM. """
