@@ -1,6 +1,8 @@
 #ifndef LIBMC_CORE_EVENTS_SYSTEM_EVENT_DISPATCHER_H_
 #define LIBMC_CORE_EVENTS_SYSTEM_EVENT_DISPATCHER_H_
 
+#include "google/protobuf/message_lite.h"
+
 #include "apps/libmc/core/system_manager_interface.h"
 #include "event.h"
 #include "event_dispatcher_interface.h"
@@ -42,6 +44,9 @@ class SystemEventDispatcher : public EventDispatcherInterface {
   // Args:
   //  shutdown: Whether we want to shutdown the system.
   bool Dispatch(bool shutdown);
+  // Note that this version of DispatchMessage() assumes that message is of type
+  // SystemMessage.
+  virtual bool DispatchMessage(const ::google::protobuf::MessageLite *message);
 
  private:
   // Private constructor to force use of singleton.

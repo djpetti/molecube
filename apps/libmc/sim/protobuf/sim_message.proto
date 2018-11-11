@@ -1,9 +1,11 @@
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 
+import "apps/libmc/sim/protobuf/system_message.proto";
+
 package libmc.sim;
 
 message SimMessage {
-  // If set to true, specifies that we want to shut down the VM.
-  bool shut_down = 1;
+  // Message that handles system actions and statuses.
+  SystemMessage system = 1;
 }

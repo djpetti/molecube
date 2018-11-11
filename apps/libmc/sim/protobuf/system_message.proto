@@ -1,0 +1,10 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+
+package libmc.sim;
+
+// Message defining system actions and states.
+message SystemMessage {
+  // If set to true, specifies that we want to shut down the VM.
+  bool shutdown = 1;
+}

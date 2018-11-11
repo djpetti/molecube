@@ -1,18 +1,15 @@
 #ifndef LIBMC_SIM_SIMULATOR_COM_H_
 #define LIBMC_SIM_SIMULATOR_COM_H_
 
-#include "google/protobuf/message_lite.h"
-
 #include "cows_interface.h"
 #include "serial_link_interface.h"
+#include "simulator_com_interface.h"
 
 namespace libmc {
 namespace sim {
 
-typedef ::google::protobuf::MessageLite ProtoMessage;
-
 // Defines a high-level interface for communicating with the simulation.
-class SimulatorCom {
+class SimulatorCom : public SimulatorComInterface {
  public:
   SimulatorCom();
   // Allows us to inject the SerialLink and Cows to use when unit testing.
@@ -20,25 +17,12 @@ class SimulatorCom {
   //  serial_link: The serial link object to use.
   //  cows: The Cows object to use.
   SimulatorCom(SerialLinkInterface *serial_link, CowsInterface *cows);
-  ~SimulatorCom();
+  virtual ~SimulatorCom();
 
-  // Opens a new connection on the simulator serial port.
-  // Returns:
-  //  True if it succeeded in opening the connection, false otherwise.
-  bool Open();
+  virtual bool Open();
 
-  // Sends a message to the simulator.
-  // Args:
-  //  message: The message to send.
-  // Returns:
-  //  True if sending the message succeeded, false otherwise.
-  bool SendMessage(const ProtoMessage &message);
-  // Receives a message from the simulator.
-  // Args:
-  //  message: The message to receive into.
-  // Returns:
-  //  True if receiving the message succeeded, false otherwise.
-  bool ReceiveMessage(ProtoMessage *message);
+  virtual bool SendMessage(const ProtoMessage &message);
+  virtual bool ReceiveMessage(ProtoMessage *message);
 
  private:
   // Reads from the serial port until it finds a valid packet separator.

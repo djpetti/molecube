@@ -5,6 +5,7 @@ cc_library(
   deps = ["//apps/libmc/core",
           "@gtest//:gmock"],
   restricted_to = ["//cpus:x86"],
+  visibility = ["//apps/libmc/sim/tests:__pkg__"],
 )
 
 cc_test(
