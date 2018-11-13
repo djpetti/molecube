@@ -434,7 +434,7 @@ class Text(CanvasObject):
     # TODO (danielp): Real bounding box calculation.
     return (self._pos_x, self._pos_y, self._pos_x, self._pos_y)
 
-class Grid(CanvasObject):
+class Grid():
     """ Draws a grid on the screen """
 
     def __init__(self, canvas, grid_size):
