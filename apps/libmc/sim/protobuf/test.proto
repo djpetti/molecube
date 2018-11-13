@@ -1,0 +1,10 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+
+package libmc.sim.testing;
+
+// A message that is explicitly for testing.
+message TestMessage {
+  int32 field1 = 1;
+  bool field2 = 2;
+}

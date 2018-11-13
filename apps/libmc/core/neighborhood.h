@@ -1,9 +1,10 @@
-#ifndef LIBMC_NEIGHBORHOOD_H_
-#define LIBMC_NEIGHBORHOOD_H_
+#ifndef LIBMC_CORE_NEIGHBORHOOD_H_
+#define LIBMC_CORE_NEIGHBORHOOD_H_
 
 #include <stdint.h>
 
 namespace libmc {
+namespace core {
 
 // Represents the connection configuration of a cube.
 struct Connections {
@@ -76,6 +77,7 @@ class Neighborhood {
   Connections connections_;
 };
 
+}  // namespace core
 }  // namespace libmc
 
-#endif  // LIBMC_NEIGHBORHOOD_H_
+#endif  // LIBMC_CORE_NEIGHBORHOOD_H_

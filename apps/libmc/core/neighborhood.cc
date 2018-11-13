@@ -3,6 +3,7 @@
 // TODO (danielp): Fill in stubs.
 
 namespace libmc {
+namespace core {
 
 const Connections &Neighborhood::GetConnections() { return connections_; }
 
@@ -19,4 +20,5 @@ void Neighborhood::WaitForEvent() {}
 
 void PollForEvent() {}
 
+}  // namespace core
 }  // namespace libmc
