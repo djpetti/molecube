@@ -5,6 +5,7 @@ import display
 import event
 import obj_canvas
 from cube import Cube
+from obj_canvas import Line
 
 class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
@@ -18,6 +19,10 @@ class Tabletop(object):
     # List of cubes.
     self.__cubes = [[None for x in range(Tabletop.GRID_WIDTH)]
                      for y in range(Tabletop.GRID_HEIGHT)]
+    
+    # List of lines making up the grid
+    self.__grid = []
+    self.__drawngrid = False
 
     # Canvas on which to draw cubes.
     self.__canvas = obj_canvas.Canvas()
@@ -34,11 +39,14 @@ class Tabletop(object):
     if selected_cube is None:
       # No cube is selected. Do nothing.
       return
-
+    
+    # Places the cube
     selected_cube.snap_to_grid(Tabletop.GRID_SIZE,
                                self.__cubes,
                                offset = Tabletop.GRID_OFFSET)
     selected_cube.clear_drag()
+    
+    # Clear the grid 
     self.clear_grid()
     self.__drawngrid = False
 
@@ -50,10 +58,12 @@ class Tabletop(object):
       # No cube is selected. Do nothing.
       return
 
-    # Move the cube.
+    # Shows the grid if necessary
     if (self.__drawngrid == False):
       self.__grid = self.draw_grid()
       self.__drawngrid = True
+      
+    # Move the cube.
     selected_cube.drag(event)
 
   def make_cube(self, color=Cube.Colors.RED):
@@ -86,22 +96,24 @@ class Tabletop(object):
     self.__canvas.wait_for_events()
   
   def draw_grid(self):
+    """ Creates Line objects for grid, returns the list of line objects in grid."""
     grid = []
     window_x, window_y = self.__canvas.get_window_size()
     i = 0 
     while i < window_x:
-      id = self.__canvas.add_line( i, 0, i, window_y)
-      grid.append(id)
-      i+=200
+      line = Line(self.__canvas,( i, 0), (i, window_y))
+      grid.append(line)
+      i += 200
     j = 0
     while j < window_y:
-      id = self.__canvas.add_line(0, j, window_x, j)
-      grid.append(id)
-      j+=200
+      line = Line(self.__canvas,(0, j), (window_x, j))
+      grid.append(line)
+      j += 200
     return grid
     
   def clear_grid(self):
+    """ Removes line ID's from grid, deletes the lines from canvas."""
     for i in range(len(self.__grid)):
-      id = self.__grid.pop()
-      self.__canvas.delete_object(id)
+      line = self.__grid.pop()
+      line.delete()
    
