@@ -15,9 +15,9 @@ class CubeVm(object):
   # Location of the QEMU binary to use.
   _QEMU_BIN = "/usr/bin/qemu-system-arm"
   # Location of the QEMU configuration file for cubes.
-  _QEMU_CONFIG = "simulator/assets/cube_vm.cfg"
+  _QEMU_CONFIG = "simulator/virtual_cube/assets/cube_vm.cfg"
   # Location of the image for VMs.
-  _DISK_IMAGE = "simulator/assets/cube_os.ext4"
+  _DISK_IMAGE = "simulator/virtual_cube/assets/cube_os.ext4"
 
   # Internal counter to use for generating unique cube IDs.
   _CUBE_ID = 0

@@ -9,10 +9,10 @@ new_http_archive(
 # depend on @com_google_protobuf for protoc and proto runtimes.
 # This statement defines the @com_google_protobuf repo.
 http_archive(
-    name = "com_google_protobuf",
-    sha256 = "cef7f1b5a7c5fba672bec2a319246e8feba471f04dcebfe362d55930ee7c1c30",
-    strip_prefix = "protobuf-3.5.0",
-    urls = ["https://github.com/google/protobuf/archive/v3.5.0.zip"],
+  name = "com_google_protobuf",
+  sha256 = "cef7f1b5a7c5fba672bec2a319246e8feba471f04dcebfe362d55930ee7c1c30",
+  strip_prefix = "protobuf-3.5.0",
+  urls = ["https://github.com/google/protobuf/archive/v3.5.0.zip"],
 )
 
 new_http_archive(
@@ -22,3 +22,30 @@ new_http_archive(
   build_file = "gtest.BUILD",
   strip_prefix = "googletest-release-1.8.0",
 )
+
+# Include Python protobuf rules.
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+	name = "build_stack_rules_proto",
+	urls = ["https://github.com/stackb/rules_proto/archive/1d6550fc2e62.tar.gz"],
+	sha256 = "113e6792f5b20679285c86d91c163cc8c4d2b4d24d7a087ae4f233b5d9311012",
+	strip_prefix = "rules_proto-1d6550fc2e625d47dc4faadac92d7cb20e3ba5c5",
+)
+
+load("@build_stack_rules_proto//python:deps.bzl", "python_proto_library")
+
+python_proto_library()
+
+load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip_import")
+
+pip_repositories()
+
+pip_import(
+	name = "protobuf_py_deps",
+	requirements = "@build_stack_rules_proto//python/requirements:protobuf.txt",
+)
+
+load("@protobuf_py_deps//:requirements.bzl", protobuf_pip_install = "pip_install")
+
+protobuf_pip_install()

@@ -6,7 +6,7 @@ RUN apt-get update && \
                        unzip qemu-system-arm wget python-pip g++-multilib
 
 # Install python dependencies.
-RUN pip install mock
+RUN pip install mock pyserial
 
 # Install Bazel.
 RUN wget -O bazel_install.sh \

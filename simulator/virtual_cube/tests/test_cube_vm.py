@@ -3,7 +3,7 @@ import os
 import subprocess
 import unittest
 
-from .. import cube_vm
+from simulator.virtual_cube import cube_vm
 
 
 class TestCubeVm(unittest.TestCase):
@@ -74,3 +74,7 @@ class TestCubeVm(unittest.TestCase):
     # If we run stop again, it should do nothing.
     self.__cube.stop()
     fake_process.communicate.assert_called_once()
+
+
+if __name__ == "__main__":
+  unittest.main()
