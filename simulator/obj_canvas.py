@@ -438,6 +438,10 @@ class Grid():
     """ Draws a grid on the screen """
 
     def __init__(self, canvas, grid_size):
+        """
+        Args:
+          canvas: The canvas to draw on.
+          grid_size: The size of each square on the grid. """
         self.__canvas = canvas
         self.__grid_size = grid_size
         self.__visible = False
@@ -450,9 +454,11 @@ class Grid():
           self.__grid_template.append(((0, y), (width, y)))
 
     def visible(self):
+        # Returns whether grid is visible
         return self.__visible
 
     def show(self):
+        # Show grid on the screen
         if not self.__visible:
             self.__visible = True
             self.__grid = []
@@ -461,6 +467,7 @@ class Grid():
                                         fill = "gray"))
 
     def hide(self):
+        # Hide grid from the screen (deletes all lines from canvas)
         if self.__visible:
             self.__visible = False
             for line in self.__grid:
