@@ -4,6 +4,7 @@ import colors
 import display
 import event
 import obj_canvas
+from config import *
 from cube import Cube
 
 class Tabletop(object):
@@ -14,6 +15,8 @@ class Tabletop(object):
 
 
   def __init__(self):
+    log.logger.info("creating new tabletop")
+
     # List of cubes.
     self.__cubes = []
 
@@ -56,15 +59,25 @@ class Tabletop(object):
       color: The color of the cube.
     Returns:
       The cube that it made. """
+    log.logger.info("adding a cube to our tabletop")
+
     cube = Cube(self.__canvas, (100, 100), color)
     self.__cubes.append(cube)
 
     return cube
 
+  def get_cubes(self):
+    #return the list of cubes we have
+    return self.__cubes
+
   def start_app_on_all(self, app_type):
     """ Starts an application on all the cubes.
     Args:
       app_type: The class of the app to start. """
+
+    message = "starting " + str(app_type) + " on all cubes on our tabletop"
+    log.logger.info(message)
+
     for cube in self.__cubes:
       # Make a new instance for this cube.
       app = app_type()
