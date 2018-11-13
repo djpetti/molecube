@@ -1,5 +1,12 @@
 """ Defines various color constants. """
 
+import logger
+
+log = logger.Logger()
+
+# Base cube size, in px.
+CUBE_SIZE = 200
+
 # Cube colors.
 CUBE_RED = "#DB4D67"
 CUBE_BLUE = "#146687"

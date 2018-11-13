@@ -2,6 +2,8 @@ import colors
 import display
 import event
 import obj_canvas
+from config import *
+import cube_logger
 
 class Cube(object):
   """ Represents a single cube. """
@@ -9,9 +11,9 @@ class Cube(object):
   class Colors(object):
     """ Represents cube colors. """
 
-    RED = colors.CUBE_RED
-    BLUE = colors.CUBE_BLUE
-    GOLD = colors.CUBE_GOLD
+    RED = CUBE_RED
+    BLUE = CUBE_BLUE
+    GOLD = CUBE_GOLD
 
   class Sides(object):
     """ Represents cube sides. """
@@ -61,14 +63,13 @@ class Cube(object):
         A list of all sides """
       return cls._ALL
 
-  # Base cube size, in px.
-  CUBE_SIZE = 200
-  CUBE_OFFSET = CUBE_SIZE // 2
-
   # Currently selected cube. There can be only one.
   _selected = None
 
-  def __init__(self, canvas, idx, color):
+  # Base cube size, in px.
+  CUBE_SIZE = CUBE_SIZE
+
+  def __init__(self, canvas, pos, color):
     """
     Args:
       canvas: The canvas to draw the cube on.
@@ -100,6 +101,8 @@ class Cube(object):
     # The current application running on the cube. If None, then no application
     # is running.
     self.__application = None
+
+    #self.CUBE_SIZE = CUBE_SIZE
 
     self.__draw_cube()
 
@@ -243,6 +246,12 @@ class Cube(object):
     # Update the canvas.
     self.__canvas.update()
 
+    message = "cube changed position from " + str((old_x, old_y)) + " to " + str((x, y))
+    log.logger.info(message)
+
+  def get_color(self):
+    return self.__color
+
   def get_display(self):
     """
     Returns:
@@ -255,6 +264,10 @@ class Cube(object):
       app: The class of the app to run. """
     self.__application = app
     self.__application.run(self)
+
+  def get_app(self):
+    """ return the app we are running"""
+    return self.__application
 
   def drag(self, event):
     """ Respond to a mouse drag while the cube is selected.
