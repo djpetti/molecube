@@ -154,38 +154,6 @@ class Canvas(GuiObject):
     Args:
       color: The color to set it to. """
     self.__canvas.config(bg=color)
-  def draw_grid(self):
-    grid = []
-    id = self.__canvas.create_line(200,0,200,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(400,0,400,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(600,0,600,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(800,0,800,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(1000,0,1000,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(1200,0,1200,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(1400,0,1400,1000)
-    grid.append(id)
-    id = self.__canvas.create_line(0,200,1600,200)
-    grid.append(id)
-    id = self.__canvas.create_line(0,400,1600,400)
-    grid.append(id)
-    id = self.__canvas.create_line(0,600,1600,600)
-    grid.append(id)
-    id = self.__canvas.create_line(0,800,1600,800)
-    grid.append(id)
-    id = self.__canvas.create_line(0,1000,1600,1000)
-    grid.append(id)
-    return grid
-  def clear_grid(self, grid):
-    for i in grid:
-      self.__canvas.delete(i)
-   
-    
 
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
@@ -404,6 +372,36 @@ class Rectangle(CanvasObject):
 
     return (p1_x, p1_y, p2_x, p2_y)
 
+class Line(CanvasObject):
+  """ Draws a line on the canvas. """
+
+  def __init__(self, canvas, pos1, pos2, **kwargs):
+    """
+    Args:
+      canvas: The Canvas to draw on.
+      pos1: First endpoint of the line.
+      pos2: Second endpoint of the line. """
+    self.__pos1 = pos1
+    self.__pos2 = pos2
+
+    super(Line, self).__init__(canvas, pos1, **kwargs)
+
+  def _draw_object(self):
+    """ Draw the line on the canvas. """
+    # Get the raw canvas to draw with.
+    canvas = self._canvas.get_raw_canvas()
+
+    p1_x, p1_y, p2_x, p2_y = self.get_bbox()
+    self._reference = canvas.create_line(*self.get_bbox(),
+                                         fill=self._fill)
+
+  def get_bbox(self):
+    # Calculate corner points.
+    (p1_x, p1_y) = self.__pos1
+    (p2_x, p2_y) = self.__pos2
+
+    return (p1_x, p1_y, p2_x, p2_y)
+
 class Text(CanvasObject):
   """ Draws text on the canvas. """
 
@@ -435,3 +433,36 @@ class Text(CanvasObject):
   def get_bbox(self):
     # TODO (danielp): Real bounding box calculation.
     return (self._pos_x, self._pos_y, self._pos_x, self._pos_y)
+
+class Grid(CanvasObject):
+    """ Draws a grid on the screen """
+
+    def __init__(self, canvas, grid_size):
+        self.__canvas = canvas
+        self.__grid_size = grid_size
+        self.__visible = False
+        self.__grid_template = []
+        self.__grid = []
+        width, height = canvas.get_window_size()
+        for x in range(0, width, grid_size):
+          self.__grid_template.append(((x, 0), (x, height)))
+        for y in range(0, height, grid_size):
+          self.__grid_template.append(((0, y), (width, y)))
+
+    def visible(self):
+        return self.__visible
+
+    def show(self):
+        if not self.__visible:
+            self.__visible = True
+            self.__grid = []
+            for line in self.__grid_template:
+                self.__grid.append(Line(self.__canvas, line[0], line[1],
+                                        fill = "gray"))
+
+    def hide(self):
+        if self.__visible:
+            self.__visible = False
+            for line in self.__grid:
+                self.__canvas.delete_object(line._reference)
+            self.grid = []

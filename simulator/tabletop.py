@@ -10,17 +10,18 @@ class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
 
   GRID_SIZE = Cube.CUBE_SIZE
+  GRID_WIDTH, GRID_HEIGHT = 8, 4
   GRID_OFFSET = GRID_SIZE/2
 
   def __init__(self):
     # List of cubes.
-    self.__cubes = []
-    self.__grid = []
-    self.__drawngrid = False
+    self.__cubes = [[None for x in range(Tabletop.GRID_WIDTH)]
+                     for y in range(Tabletop.GRID_HEIGHT)]
 
     # Canvas on which to draw cubes.
     self.__canvas = obj_canvas.Canvas()
-
+    # Grid
+    self.__grid = obj_canvas.Grid(self.__canvas, Tabletop.GRID_SIZE)
     # When we drag the mouse, we want to move the currently-selected cube.
     self.__canvas.bind_event(event.MouseDragEvent, self.__mouse_dragged)
     # When we release the mouse button, we want to clear the dragging state for
@@ -38,8 +39,7 @@ class Tabletop(object):
                                self.__cubes,
                                offset = Tabletop.GRID_OFFSET)
     selected_cube.clear_drag()
-    self.__canvas.clear_grid(self.__grid)
-    self.__drawngrid = False
+    self.__grid.hide()
 
   def __mouse_dragged(self, event):
     """ Called when the user drags with the mouse. """
@@ -50,9 +50,8 @@ class Tabletop(object):
       return
 
     # Move the cube.
-    if (self.__drawngrid == False):
-      self.__grid = self.__canvas.draw_grid()
-      self.__drawngrid = True
+    if (not self.__grid.visible()):
+      self.__grid.show()
     selected_cube.drag(event)
 
   def make_cube(self, color=Cube.Colors.RED):
@@ -61,8 +60,12 @@ class Tabletop(object):
       color: The color of the cube.
     Returns:
       The cube that it made. """
-    cube = Cube(self.__canvas, (100, 100), color)
-    self.__cubes.append(cube)
+    cube = Cube(self.__canvas, (0, 0), color)
+    x, y = 0, 0
+    while self.__cubes[y][x]:
+        x += 1
+        cube.set_idx(x, y, self.__cubes)
+    self.__cubes[y][x] = cube
 
     return cube
 
