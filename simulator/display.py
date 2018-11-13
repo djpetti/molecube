@@ -1,4 +1,3 @@
-#import colors
 import obj_canvas
 from config import *
 
