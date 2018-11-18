@@ -61,9 +61,11 @@ filegroup(
   srcs = glob([
     "arm-linux-gnueabihf/**",
     "lib/gcc/arm-linux-gnueabihf/**",
-    "libexec/gcc/arm-linux-gnueabihf/**",
+    "libexec/**",
     "include/**",
-  ], exclude = []),
+  # Exclude default linker scripts so we can override them.
+  ], exclude = ["arm-linux-gnueabihf/libc/usr/lib/libc.so",
+                "arm-linux-gnueabihf/libc/usr/lib/libpthread.so"]),
 )
 
 filegroup(

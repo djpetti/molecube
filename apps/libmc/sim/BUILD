@@ -1,6 +1,6 @@
 cc_library(
   name = "sim",
-  srcs = glob(["*.cc"]),
+  srcs = glob(["*.cc"], exclude=["*_main.cc"]),
   hdrs = glob(["*.h"]),
   deps = ["//apps/libmc:constants",
           "//apps/libmc/core/events",
@@ -8,4 +8,10 @@ cc_library(
           "//apps/libmc/sim/protobuf:cc_system_message",
           "@com_google_protobuf//:protobuf_lite"],
   visibility = ["//apps/libmc:__subpackages__"],
+)
+
+cc_binary(
+  name = "simulator_process",
+  srcs = ["simulator_process_main.cc"],
+  deps = [":sim"],
 )
