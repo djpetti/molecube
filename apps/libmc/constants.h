@@ -17,7 +17,7 @@ struct Simulator {
   uint32_t MaxPacketSize;
 };
 
-constexpr Simulator kSimulator = {"/dev/vcube_ser", 115200, 1024};
+constexpr Simulator kSimulator = {"/dev/vport1p1", 115200, 1024};
 
 // The buffer size should be even for COWS to work reliably.
 static_assert(kSimulator.MaxPacketSize % 2 == 0);

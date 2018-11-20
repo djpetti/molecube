@@ -12,12 +12,9 @@ namespace sim {
 // Manages low-level communication on the serial link with the simulation host.
 class SerialLink : public SerialLinkInterface {
  public:
-  // Default constructor should be used normally.
-  SerialLink();
-  // Alternate constructor that allows us to do dependency injection during
-  // testing.
   // Args:
-  //  os_serial: The OS serial interface layer to use.
+  //  os_serial: The OS serial interface layer to use. It will not take
+  //             ownership.
   SerialLink(LinuxSerialInterface *os_serial);
   virtual ~SerialLink();
 
@@ -38,8 +35,6 @@ class SerialLink : public SerialLinkInterface {
   int serial_ = -1;
   // Handle for the OS serial interface.
   LinuxSerialInterface *os_;
-  // Keeps track of whether we own the handle.
-  bool own_os_ = true;
 };
 
 }  // namespace sim

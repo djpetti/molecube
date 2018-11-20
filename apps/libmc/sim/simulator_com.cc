@@ -10,7 +10,8 @@
 namespace libmc {
 namespace sim {
 
-SimulatorCom::SimulatorCom() : SimulatorCom(new SerialLink, new Cows) {
+SimulatorCom::SimulatorCom()
+    : SimulatorCom(new SerialLink(&backend_), new Cows) {
   // Indicate that we own this serial link and cows implementation.
   own_serial_ = true;
   own_cows_ = true;

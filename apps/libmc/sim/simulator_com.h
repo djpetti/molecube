@@ -4,6 +4,7 @@
 #include "cows_interface.h"
 #include "serial_link_interface.h"
 #include "simulator_com_interface.h"
+#include "virtual_serial.h"
 
 namespace libmc {
 namespace sim {
@@ -54,6 +55,9 @@ class SimulatorCom : public SimulatorComInterface {
 
   // Internal low-level serial interface.
   SerialLinkInterface *serial_;
+  // Serial backend to use for communication.
+  VirtualSerial backend_;
+
   // Whether we have ownership of the serial link.
   bool own_serial_ = false;
 
