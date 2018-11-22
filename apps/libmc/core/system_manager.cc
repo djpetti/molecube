@@ -11,7 +11,7 @@ bool SystemManager::Shutdown() {
   // Flush any buffers to disk.
   sync();
 
-  if (reboot(LINUX_REBOOT_CMD_HALT) < 0) {
+  if (reboot(LINUX_REBOOT_CMD_POWER_OFF) < 0) {
     // Failure to halt.
     return false;
   }

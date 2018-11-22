@@ -89,12 +89,14 @@ class SerialCom(object):
 
     # Serialize the message.
     bin_message = message.SerializeToString()
+    # Add the overhead word for COWS.
+    bin_message = bytearray(2) + bytearray(bin_message)
     # Stuff the message.
     cows.cows_stuff(bin_message)
     # Add the separator at the end.
-    bin_message += self._SEPARATOR
+    complete_message = bin_message + self._SEPARATOR
 
-    self.__write_all(bin_message)
+    self.__write_all(complete_message)
 
   def read_message(self):
     """ Reads a Protobuf message from the serial port.
@@ -115,9 +117,9 @@ class SerialCom(object):
 
     # Unstuff the message.
     cows.cows_unstuff(bin_message)
-    # Deserialize the message.
+    # Deserialize the message, skipping the overhead word.
     message = sim_message_pb2.SimMessage()
-    message.ParseFromString(bin_message)
+    message.ParseFromString(bin_message[2:])
 
     logger.debug("Read message: %s" % (str(message)))
 

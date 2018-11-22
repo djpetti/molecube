@@ -34,20 +34,22 @@ class TestSerialCom(unittest.TestCase):
         message = message[self.__call_count]
       self.__call_count += 1
 
-      assert len(array) == len(message)
+      # The array should be one word longer than the message due to the
+      # overhead.
+      assert len(array) == len(message) + 2
 
       # Copy the legitimate message.
-      for i in range(0, len(array)):
-        array[i] = message[i]
+      for i in range(0, len(message)):
+        array[i + 2] = message[i]
 
   def __fake_message(self, length):
     """ Creates a fake message of a given length, including the packet
-    separator. (Not included in the length.)
+    separator and overhead word. (Not included in the length.)
     Args:
       length: The length of the message.
     Returns:
       The fake message. """
-    return b'1' * length + _SEPARATOR
+    return b'1' * (length + 2) + _SEPARATOR
 
   # Patch the serial call so it doesn't try to open an actual device.
   @mock.patch("socket.socket")
@@ -90,15 +92,15 @@ class TestSerialCom(unittest.TestCase):
     com, mocked_socket = self.__make_serial()
 
     # Make it look like the write succeeded in one go.
-    mocked_socket.send.return_value = message.ByteSize() + len(_SEPARATOR)
+    mocked_socket.send.return_value = message.ByteSize() + 2 + len(_SEPARATOR)
     # For the cows stuffing, we're just not going to do anything.
 
     com.write_message(message)
 
-    # It should have written the message.
+    # It should have written the message, plus an overhead word.
     bin_message = message.SerializeToString()
-    mocked_cows.assert_called_once_with(bin_message)
-    mocked_socket.send.assert_called_once_with(bin_message + _SEPARATOR)
+    mocked_cows.assert_called_once_with(bytearray(2) + bin_message)
+    mocked_socket.send.assert_called_once_with(bytearray(2) + bin_message + _SEPARATOR)
 
   @mock.patch("simulator.virtual_cube.cows.cows_stuff")
   def test_write_partial_message(self, mocked_cows):
@@ -112,17 +114,18 @@ class TestSerialCom(unittest.TestCase):
     # Create the SerialCom object.
     com, mocked_socket = self.__make_serial()
 
-    # Make it look like the write succeeded in two tries.
-    mocked_socket.send.side_effect = [message.ByteSize(), len(_SEPARATOR)]
+    # Make it look like the write succeeded in two tries. (Add two bytes for the
+    # overhead.)
+    mocked_socket.send.side_effect = [message.ByteSize() + 2, len(_SEPARATOR)]
     # For the cows stuffing, we're just not going to do anything.
 
     com.write_message(message)
 
     # It should have written the message.
     bin_message = message.SerializeToString()
-    mocked_cows.assert_called_once_with(bin_message)
+    mocked_cows.assert_called_once_with(bytearray(2) + bin_message)
     # It should have made two calls to write.
-    expected_calls = [mock.call.send(bin_message + _SEPARATOR),
+    expected_calls = [mock.call.send(bytearray(2) + bin_message + _SEPARATOR),
                       mock.call.send(_SEPARATOR)]
     mocked_socket.assert_has_calls(expected_calls)
 
@@ -158,7 +161,7 @@ class TestSerialCom(unittest.TestCase):
                       mock.call.recv()]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff it.
-    mocked_cows.assert_called_once_with(bin_message)
+    mocked_cows.assert_called_once()
 
     # Make sure the message matches.
     self.assertEqual(message, got_message)
@@ -204,7 +207,7 @@ class TestSerialCom(unittest.TestCase):
                       mock.call.recv()]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff it.
-    mocked_cows.assert_called_once_with(bin_message)
+    mocked_cows.assert_called_once()
 
     # Make sure the message matches.
     self.assertEqual(message, got_message)
@@ -253,7 +256,7 @@ class TestSerialCom(unittest.TestCase):
     mocked_socket.assert_has_calls(expected_calls)
     mocked_socket.recv.reset_mock()
     # It should have tried to unstuff it.
-    mocked_cows.assert_called_once_with(bin_message1)
+    mocked_cows.assert_called_once()
     mocked_cows.reset_mock()
 
     # Make sure the message matches.
@@ -266,7 +269,7 @@ class TestSerialCom(unittest.TestCase):
     # There should be no calls to the recv method.
     mocked_socket.recv.assert_not_called()
     # It should have tried to unstuff the message.
-    mocked_cows.assert_called_once_with(bin_message2)
+    mocked_cows.assert_called_once()
 
     # Make sure the message matches.
     self.assertEqual(message2, got_message2)
@@ -314,7 +317,7 @@ class TestSerialCom(unittest.TestCase):
     mocked_socket.assert_has_calls(expected_calls)
     mocked_socket.recv.reset_mock()
     # It should have tried to unstuff it.
-    mocked_cows.assert_called_once_with(bin_message1)
+    mocked_cows.assert_called_once()
     mocked_cows.reset_mock()
 
     # Make sure the message matches.
@@ -331,7 +334,7 @@ class TestSerialCom(unittest.TestCase):
     # the second message plus the ending separator.
     mocked_socket.recv.assert_called_once_with()
     # It should have tried to unstuff it.
-    mocked_cows.assert_called_once_with(bin_message2)
+    mocked_cows.assert_called_once()
 
     # Make sure the message matches.
     self.assertEqual(message2, got_message2)
@@ -343,18 +346,20 @@ class TestSerialCom(unittest.TestCase):
     it requires multiple tries. """
     com, mocked_socket = self.__make_serial()
 
-    # Mock the read function so it looks like finding the separator failed and
-    # then succeeded. The final 2 calls are just dummy separators so that the
-    # read terminates.
-    mocked_socket.recv.side_effect = [b'10', b'1', _SEPARATOR[0], _SEPARATOR[1],
-                                      _SEPARATOR]
-
     # Fake the cows unstuffing so we get a valid message.
     message = test_pb2.TestMessage()
     bin_message = message.SerializeToString()
     mocked_sys_action.return_value = message
     fake_cows = self.FakeCowsUnstuff(bin_message)
     mocked_cows.side_effect = fake_cows
+
+    fake_message = self.__fake_message(len(bin_message))
+
+    # Mock the read function so it looks like finding the separator failed and
+    # then succeeded. The final 2 calls are just dummy separators so that the
+    # read terminates.
+    mocked_socket.recv.side_effect = [b'10', b'1', _SEPARATOR[0], _SEPARATOR[1],
+                                      fake_message + _SEPARATOR]
 
     # If we try to read now, it should first synchronize to the packet.
     got_message = com.read_message()
@@ -365,7 +370,7 @@ class TestSerialCom(unittest.TestCase):
                       mock.call.recv(1), mock.call.recv()]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff the message.
-    mocked_cows.assert_called_once_with(bin_message)
+    mocked_cows.assert_called_once()
 
     # Make sure the messages match.
     self.assertEqual(message, got_message)

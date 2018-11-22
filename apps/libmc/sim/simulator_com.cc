@@ -105,8 +105,6 @@ bool SimulatorCom::ReceiveMessage(ProtoMessage *message) {
     const int32_t bytes_read =
         serial_->ReceivePartialMessage(receive_buffer_ + receive_space_used_,
                                        max_length - receive_space_used_);
-    // If this is true, it's probably a serial misconfiguration.
-    assert(bytes_read != 0);
     if (bytes_read < 0) {
       // Reading failure.
       receive_space_used_ = 0;
@@ -116,7 +114,9 @@ bool SimulatorCom::ReceiveMessage(ProtoMessage *message) {
 
     // Since the separator is two bytes instead of one, we actually have to
     // overlap slightly with the previous search area when looking for it.
-    search_start = receive_space_used_ - 1;
+    if (receive_space_used_ != 0) {
+      search_start = receive_space_used_ - 1;
+    }
     receive_space_used_ += bytes_read;
   }
 
