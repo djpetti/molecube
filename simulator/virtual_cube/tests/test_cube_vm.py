@@ -36,7 +36,12 @@ class TestCubeVm(unittest.TestCase):
 
   @mock.patch("subprocess.Popen")
   @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
-  def test_start(self, mocked_serial, mocked_popen):
+  @mock.patch("os.path.exists")
+  def test_start(self, mocked_os, mocked_serial, mocked_popen):
+    """ Tests that we can start the VM. """
+    # Make it look like the serial handle exists.
+    mocked_os.return_value = True
+
     self.__cube.start()
 
     # Make sure it started the process.
@@ -47,12 +52,44 @@ class TestCubeVm(unittest.TestCase):
                                          stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE)
 
+    # It should have checked for the serial handle.
+    mocked_os.assert_called_once_with("/tmp/cube0")
     # It should have started the serial interface.
     self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
 
   @mock.patch("subprocess.Popen")
   @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
-  def test_stop(self, mocked_serial, mocked_popen):
+  @mock.patch("os.path.exists")
+  def test_start_spin(self, mocked_os, mocked_serial, mocked_popen):
+    """ Tests that we can start the VM when waiting for the serial takes
+    multiple tries. """
+    # Make it look like the serial handle doesn't exist initially and then does.
+    mocked_os.side_effect = [False, True]
+
+    self.__cube.start()
+
+    # Make sure it started the process.
+    expected_command = [cube_vm.CubeVm._QEMU_BIN, "-readconfig",
+                        cube_vm.CubeVm._QEMU_CONFIG, "-nographic", "-chardev",
+                        "socket,path=/tmp/cube0,server,nowait,id=vcube_ser"]
+    mocked_popen.assert_called_once_with(expected_command,
+                                         stdin=subprocess.PIPE,
+                                         stdout=subprocess.PIPE)
+
+    # It should have checked for the serial handle twice.
+    calls = [mock.call("/tmp/cube0")] * 2
+    mocked_os.assert_has_calls(calls)
+    # It should have started the serial interface.
+    self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
+
+  @mock.patch("subprocess.Popen")
+  @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
+  @mock.patch("os.path.exists")
+  def test_stop(self, mocked_os, mocked_serial, mocked_popen):
+    """ Tests that we can stop the VM. """
+    # Make it look like the serial handle exists.
+    mocked_os.return_value = True
+
     # Make popen return a dummy process.
     fake_process = mocked_popen.return_value
 

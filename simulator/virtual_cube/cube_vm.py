@@ -2,6 +2,7 @@ import gzip
 import logging
 import os
 import subprocess
+import time
 
 from apps.libmc.sim.protobuf import sim_message_pb2
 
@@ -114,6 +115,11 @@ class CubeVm(object):
     self.__process = subprocess.Popen(command, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE)
     logger.info("Started cube VM %d." % (self.__id))
+
+    # Wait for the serial interface to exist.
+    logger.debug("Waiting for serial...")
+    while not os.path.exists(self.get_serial()):
+      time.sleep(1)
 
     # Create the serial link manager.
     self.__serial = serial_com.SerialCom(self.get_serial())
