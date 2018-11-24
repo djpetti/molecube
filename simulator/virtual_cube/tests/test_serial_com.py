@@ -375,5 +375,25 @@ class TestSerialCom(unittest.TestCase):
     # Make sure the messages match.
     self.assertEqual(message, got_message)
 
+  @mock.patch("select.select")
+  def test_select_on(self, mocked_select):
+    """ Tests that select_on() works under normal conditions. """
+    # Make some instances to try with.
+    coms = []
+    for i in range(0, 3):
+      com, _ = self.__make_serial()
+      coms.append(com)
+
+    # Make sure the select call indicates that something is readable.
+    mocked_select.return_value = ([coms[0]], [], [])
+
+    readable = serial_com.SerialCom.select_on(coms)
+    # It should have given us the correct one.
+    self.assertListEqual([coms[0]], readable)
+
+    # It should have called select().
+    mocked_select.assert_called_once()
+
+
 if __name__ == "__main__":
   unittest.main()

@@ -1,4 +1,8 @@
 import config
+import logging
+
+from virtual_cube import cube_vm
+
 import display
 import event
 import logging
@@ -62,6 +66,32 @@ class Cube(object):
   # Currently selected cube. There can be only one.
   _selected = None
 
+  @classmethod
+  def select_on(self, cubes):
+    """ Takes a list of Cubes, and waits until any of them have data ready to be
+    read from the serial.
+    Args:
+      cubes: The list of Cubes to wait on.
+    Returns:
+      List of cubes that have data ready. """
+    # Extract the VMs from the cubes.
+    vms = {}
+    for cube in cubes:
+      vms[cube.__vm] = cube
+
+    # Delegate to the cube VM.
+    readable = cube_vm.CubeVm.select_on(vms.keys())
+
+    # Extract the cubes.
+    return [vms[vm] for vm in readable]
+
+  @classmethod
+  def get_selected(cls):
+    """
+    Returns:
+      The currently selected cube. """
+    return cls._selected
+
   def __init__(self, canvas, idx, color):
     """
     Args:
@@ -94,6 +124,10 @@ class Cube(object):
     # The current application running on the cube. If None, then no application
     # is running.
     self.__application = None
+
+    # Initialize the VM for the cube.
+    self.__vm = virtual_cube.cube_vm.CubeVm()
+    self.__vm.start()
 
     self.__draw_cube()
 

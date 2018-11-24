@@ -3,7 +3,7 @@ import os
 import subprocess
 import unittest
 
-from simulator.virtual_cube import cube_vm
+from simulator.virtual_cube import cube_vm, serial_com
 
 
 class TestCubeVm(unittest.TestCase):
@@ -14,6 +14,20 @@ class TestCubeVm(unittest.TestCase):
     cube_vm.CubeVm._CUBE_ID = 0
     # Create a CubeVm object for testing.
     self.__cube = cube_vm.CubeVm()
+
+  @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
+  def test_attach_to(self, mocked_serial):
+    """ Tests that the attach_to argument behaves properly. """
+    # Attach to a fake serial handle.
+    cube = cube_vm.CubeVm(attach_to="cube")
+
+    # It should have set the serial handle.
+    self.assertEqual("/tmp/cube", cube.get_serial())
+    # It should have created the SerialCom instance.
+    mocked_serial.assert_called_once_with(cube.get_serial())
+
+    # It should not allow us to start this cube manually.
+    self.assertRaises(RuntimeError, cube.start)
 
   def test_get_serial(self):
     """ Tests that get_serial() works under normal conditions. """
@@ -108,6 +122,40 @@ class TestCubeVm(unittest.TestCase):
     # If we run stop again, it should do nothing.
     self.__cube.stop()
     fake_process.wait.assert_called_once()
+
+  @mock.patch("simulator.virtual_cube.serial_com.SerialCom.select_on")
+  @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
+  def test_select_on(self, mocked_serial, mocked_select):
+    """ Tests that select_on() works under normal conditions. """
+    # We're just going to create some fake "SerialComs" so we can tell them
+    # appart.
+    fake_serials = []
+    for i in range(0, 3):
+      fake_serials.append(mock.MagicMock())
+    mocked_serial.side_effect = fake_serials
+
+    # Make some cubes to test with.
+    cubes = []
+    for i in range(0, 3):
+      # We use attach_to here so we'll have valid serial interfaces without
+      # actually starting the cubes.
+      cubes.append(cube_vm.CubeVm(attach_to="cube%d" % (i)))
+
+    # It should have initialized the SerialComs.
+    expected_calls = []
+    for cube in cubes:
+      expected_calls.append(mock.call(cube.get_serial()))
+    mocked_serial.assert_has_calls(expected_calls)
+
+    # Make it look like the first one is readable.
+    mocked_select.return_value = [fake_serials[0]]
+
+    readable = cube_vm.CubeVm.select_on(cubes)
+
+    # It should have indicated that the correct one is readable.
+    self.assertListEqual([cubes[0]], readable)
+    # It should have called select_on().
+    mocked_select.assert_called_once()
 
 
 if __name__ == "__main__":

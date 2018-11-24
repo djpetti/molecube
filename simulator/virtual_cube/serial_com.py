@@ -1,5 +1,6 @@
 import collections
 import logging
+import select
 import socket
 
 from apps.libmc.sim.protobuf import sim_message_pb2
@@ -15,6 +16,24 @@ class SerialCom(object):
 
   # Separator for serial messages.
   _SEPARATOR = b"\x00\x00"
+
+  @classmethod
+  def select_on(self, coms):
+    """ Takes a list of SerialComs, and waits until any of them have data ready
+    to be read from the serial.
+    Args:
+      coms: The list of SerialComs to wait on.
+    Returns:
+      List of SerialComs that have data ready. """
+    # Extract the internal sockets.
+    sockets = [com.__socket for com in coms]
+    logger.debug("Waiting on %d sockets..." % (len(sockets)))
+
+    # Perform the select call.
+    readable, _, _, = select.select(sockets, [], [])
+    logger.debug("%d sockets are now readable." % (len(readable)))
+
+    return readable
 
   def __init__(self, serial_fd):
     """

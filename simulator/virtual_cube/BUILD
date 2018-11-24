@@ -3,7 +3,7 @@ py_library(
   srcs = glob(["*.py"], exclude=["starter.py"]),
   data = glob(["assets/*"]),
   deps = ["//apps/libmc/sim/protobuf:python_sim_message"],
-  visibility = ["//simulator/virtual_cube/tests:__pkg__"],
+  visibility = ["//simulator:__subpackages__"],
 )
 
 py_library(

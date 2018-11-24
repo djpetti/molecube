@@ -43,6 +43,28 @@ class CubeVm(object):
   # Internal counter to use for generating unique cube IDs.
   _CUBE_ID = 0
 
+  @classmethod
+  def select_on(self, cubes):
+    """ Takes a list of VMs, and waits until any of them have data ready to be
+    read from the serial.
+    Args:
+      cubes: The list of VMs to wait on.
+    Returns:
+      List of cubes that have data ready. """
+    # Extract the serial interfaces from the cubes.
+    serials = {}
+    for cube in cubes:
+      if cube.__serial is None:
+        raise AttributeError( \
+            "Cannot run select_on() with VMs that are stopped.")
+      serials[cube.__serial] = cube
+
+    # Delegate to the serial manager.
+    readable = serial_com.SerialCom.select_on(serials.keys())
+
+    # Extract the VMs.
+    return [serials[serial] for serial in readable]
+
   def __init__(self, attach_to=None):
     """
     Args:
@@ -144,7 +166,7 @@ class CubeVm(object):
       self.__process = None
 
   def get_serial(self):
-    """ Gets the serial FD for this cube.
+    """ Gets the path to the serial device for this cube.
     Returns:
       The serial FD for the cube. """
     return "/tmp/%s" % (self.__serial_name)
