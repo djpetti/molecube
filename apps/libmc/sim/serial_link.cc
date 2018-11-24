@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <termios.h>
 
+#include "glog/logging.h"
+
 #include "linux_serial.h"
 
 namespace libmc {
@@ -15,6 +17,7 @@ SerialLink::SerialLink(LinuxSerialInterface *os_serial) : os_(os_serial) {}
 SerialLink::~SerialLink() {
   // Close the serial device.
   if (IsOpen()) {
+    VLOG(1) << "Closing serial link.";
     (void)os_->Close(serial_);
   }
 }
@@ -24,6 +27,7 @@ bool SerialLink::Open(const char *device, uint32_t baud) {
   serial_ = os_->Open(device);
   if (serial_ < 0) {
     // Failure to open device.
+    PLOG(ERROR) << "Failure to open serial";
     return false;
   }
 
@@ -33,6 +37,7 @@ bool SerialLink::Open(const char *device, uint32_t baud) {
     return false;
   }
 
+  VLOG(1) << "Successfully opened serial.";
   return true;
 }
 
@@ -46,6 +51,7 @@ bool SerialLink::ConfigureSerial(uint32_t baud) {
 
   if (!os_->TcGetAttr(serial_, &tty)) {
     // Failure to get initial attributes.
+    PLOG(ERROR) << "Failed to get serial attributes";
     return false;
   }
 
@@ -69,6 +75,7 @@ bool SerialLink::ConfigureSerial(uint32_t baud) {
   os_->TcFlush(serial_, TCIFLUSH);
   if (!os_->TcSetAttr(serial_, TCSANOW, &tty)) {
     // Failure to set attributes.
+    PLOG(ERROR) << "Failed to set serial attributes";
     return false;
   }
 
@@ -76,11 +83,14 @@ bool SerialLink::ConfigureSerial(uint32_t baud) {
 }
 
 bool SerialLink::SendMessage(const uint8_t *message, uint32_t length) {
+  VLOG(1) << "Sending message of length " << length << ".";
+
   uint32_t remaining = length;
   while (remaining > 0) {
     const int32_t write_ret = os_->Write(serial_, message, remaining);
     if (write_ret < 0) {
       // Write failure.
+      PLOG(ERROR) << "Failed to write to serial";
       return false;
     }
 
@@ -92,11 +102,14 @@ bool SerialLink::SendMessage(const uint8_t *message, uint32_t length) {
 }
 
 bool SerialLink::ReceiveMessage(uint8_t *message, uint32_t length) {
+  VLOG(1) << "Receiving message of length " << length << ".";
+
   uint32_t remaining = length;
   while (remaining > 0) {
     const int32_t read_ret = os_->Read(serial_, message, remaining);
     if (read_ret < 0) {
       // Read failure.
+      PLOG(ERROR) << "Failed to read from serial";
       return false;
     }
 
@@ -109,8 +122,13 @@ bool SerialLink::ReceiveMessage(uint8_t *message, uint32_t length) {
 
 int32_t SerialLink::ReceivePartialMessage(uint8_t *message,
                                           uint32_t max_length) {
+  VLOG(1) << "Receiving message of max length " << max_length << ".";
+
   // For receiving, we're fine with reading a partial message.
-  return os_->Read(serial_, message, max_length);
+  const int32_t bytes_read = os_->Read(serial_, message, max_length);
+  PLOG_IF(ERROR, bytes_read < 0) << "Failed to read from serial";
+
+  return bytes_read;
 }
 
 }  // namespace sim

@@ -1,3 +1,0 @@
-INFO:__main__:Reading configuration from file: /starter.yaml
-INFO:__main__:Starting binary 'cube_bin/apps/libmc/sim/simulator_process'.
-DEBUG:__main__:Pid: 1172
