@@ -1,0 +1,29 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+
+package libmc.sim;
+
+// Message defining an image.
+message Image {
+  // Width of the image.
+  uint32 width = 1;
+  // Height of the image.
+  uint32 height = 2;
+  // Image data represented in pure bytes. Every 3 bytes is an RGB tripple,
+  // where each sub-pixel value ranges from 0-255. The image is stored in
+  // row-major order.
+  bytes image_data = 3;
+}
+
+// Message defining a graphics directive.
+message GraphicsMessage {
+  enum Type {
+    // Draw a new image on the screen.
+    PAINT = 0;
+  }
+  // Type of graphics operation.
+  Type type = 1;
+
+  // Image to use for graphics operation.
+  Image image = 2;
+}

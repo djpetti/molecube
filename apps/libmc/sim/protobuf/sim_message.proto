@@ -1,6 +1,7 @@
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 
+import "apps/libmc/sim/protobuf/graphics_message.proto";
 import "apps/libmc/sim/protobuf/system_message.proto";
 
 package libmc.sim;
@@ -8,4 +9,6 @@ package libmc.sim;
 message SimMessage {
   // Message that handles system actions and statuses.
   SystemMessage system = 1;
+  // Message that handles graphics operations.
+  GraphicsMessage graphics = 2;
 }
