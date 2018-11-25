@@ -1,9 +1,9 @@
 import logging
-import sys
 
 from cube import Cube
 from obj_canvas import Line
 import config
+import cube_event_handler
 import display
 import event
 import obj_canvas
@@ -27,7 +27,10 @@ class Tabletop(object):
     self.__drawngrid = False
 
     # Canvas on which to draw cubes.
-    self.__canvas = obj_canvas.Canvas(background = config.get('COLORS', 'BACKGROUND'))
+    self.__canvas = obj_canvas.Canvas(background=config.get('COLORS', 'BACKGROUND'))
+    self.__cube_event_handler = \
+        cube_event_handler.CubeEventHandler(self.__canvas)
+
     # When we drag the mouse, we want to move the currently-selected cube.
     self.__canvas.bind_event(event.MouseDragEvent, self.__mouse_dragged)
     # When we release the mouse button, we want to clear the dragging state for
@@ -45,7 +48,7 @@ class Tabletop(object):
     # Places the cube
     selected_cube.snap_to_grid(int(config.get('CUBE', 'CUBE_SIZE')),
                                self.__cubes,
-                               offset = int(config.get('CUBE', 'GRID_OFFSET')))
+                               offset=int(config.get('CUBE', 'GRID_OFFSET')))
     selected_cube.clear_drag()
 
     # Clear the grid
@@ -67,6 +70,14 @@ class Tabletop(object):
 
     # Move the cube.
     selected_cube.drag(event)
+
+  def __wait_for_cube_events(self):
+    """ Waits for events originating from the cubes, and sent over the serial
+    interface. When it receives a message, it dispatches a custom Tkinter event
+    which can then be handled in the main thread. """
+    while True:
+      # Handle all events.
+      self.__cube_event_handler.handle_events(self.__cubes)
 
   def make_cube(self, color=config.get('COLORS', 'CUBE_RED')):
     """ Adds a new cube to the canvas.
@@ -105,6 +116,9 @@ class Tabletop(object):
 
   def run(self):
     """ Runs the tabletop simulation indefinitely. """
+    # Kick of cube event listener thread.
+    self.__canvas.after(0, self.__wait_for_cube_events)
+
     self.__canvas.wait_for_events()
 
   def draw_grid(self):
@@ -115,12 +129,12 @@ class Tabletop(object):
     window_x, window_y = self.__canvas.get_window_size()
     i = 0
     while i < window_x:
-      line = Line(self.__canvas, (i, 0), (i, window_y), fill = config.get('COLORS', 'GRID'))
+      line = Line(self.__canvas, (i, 0), (i, window_y), fill=config.get('COLORS', 'GRID'))
       grid.append(line)
       i += int(config.get('CUBE', 'CUBE_SIZE'))
     j = 0
     while j < window_y:
-      line = Line(self.__canvas, (0, j), (window_x, j), fill = config.get('COLORS', 'GRID'))
+      line = Line(self.__canvas, (0, j), (window_x, j), fill=config.get('COLORS', 'GRID'))
       grid.append(line)
       j += int(config.get('CUBE', 'CUBE_SIZE'))
     return grid

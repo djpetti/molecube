@@ -176,3 +176,10 @@ class CubeVm(object):
     Args:
       message: The message to send. This must be a protobuf SimMessage. """
     self.__serial.write_message(message)
+
+  def receive_message(self):
+    """ Receives a message from this cube. Will block until it receives
+    something.
+    Returns:
+      The message that it received. """
+    return self.__serial.read_message()

@@ -65,6 +65,8 @@ class Cube(object):
 
   # Currently selected cube. There can be only one.
   _selected = None
+  # Unique ID for the cube.
+  _current_id = 0
 
   @classmethod
   def select_on(self, cubes):
@@ -111,6 +113,11 @@ class Cube(object):
 
     self.__color = color
 
+    # Assign a unique ID.
+    self.__id = Cube._current_id
+    Cube._current_id += 1
+    logger.info("Creating new cube with ID %d." % (self.__id))
+
     # Whether the cube is currently being dragged.
     self.__dragging = False
     # List of shapes in the cube.
@@ -126,17 +133,18 @@ class Cube(object):
     self.__application = None
 
     # Initialize the VM for the cube.
-    self.__vm = virtual_cube.cube_vm.CubeVm()
+    self.__vm = cube_vm.CubeVm()
     self.__vm.start()
 
     self.__draw_cube()
 
-  @classmethod
-  def get_selected(cls):
-    """
-    Returns:
-      The currently selected cube. """
-    return cls._selected
+  def __hash__(self):
+    # Use the ID to generate a hash.
+    return hash(self.get_id())
+
+  def __eq__(self, other):
+    # Two instances are the same if they have the same ID.
+    return self.get_id() == other.get_id()
 
   def __draw_cube(self):
     """ Draws the cube on the canvas. """
@@ -326,31 +334,17 @@ class Cube(object):
     assert Cube._selected == self
     Cube._selected = None
 
-  def send_message(self, side, message):
-    """ Sends a message to a cube directly connected to this one.
+  def send_message(self, message):
+    """ Sends a message to the cube.
     Args:
-      side: The side that the recipient is connected on.
-      message: The string message to send. """
-    other = self.__connected[side]
-    if other is None:
-      # Make sure there's something there.
-      raise ValueError("No cube connected on side %s'." % (side))
+      message: The SimMessage to send. """
+    self.__vm.send_message(message)
 
-    # Pass the message to the cube.
-    other_side = Cube.Sides.opposite(side)
-    other.receive_message(other_side, message)
-
-  def receive_message(self, side, message):
-    """ Receives a message from a connected cube.
-    Args:
-      side: The side that the sender is connected to.
-      message: The string message being received. """
-    if not self.__application:
-      # With no app, the message gets dropped.
-      return
-
-    # Otherwise, pass it to the app.
-    self.__application.on_message_receive(side, message)
+  def receive_message(self):
+    """ Receives a message from the cube.
+    Returns:
+      The message that it received. """
+    return self.__vm.receive_message()
 
   def snap_to_grid(self, grid_size, others, offset = 0):
     """ Snap this cube to grid.
@@ -409,3 +403,9 @@ class Cube(object):
           self.__config_changed_hook()
         if other_changed:
           other.__config_changed_hook()
+
+  def get_id(self):
+    """
+    Returns:
+      The unique ID for this cube. """
+    return self.__id

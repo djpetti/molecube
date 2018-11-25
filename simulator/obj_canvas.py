@@ -157,6 +157,23 @@ class Canvas(GuiObject):
       color: The color to set it to. """
     self.__canvas.config(bg=color)
 
+  def after(self, delay, callback):
+    """ Run an alarm callback after a delay. The callback will run in another
+    thread, but it will still be able to interact with Tkinter.
+    Args:
+      delay: The delay amount in ms.
+      callback: The callback to run. """
+    logger.debug("Running %s after %d ms." % (callback, delay))
+    self.__window.after(delay, callback)
+
+  def generate_event(self, event_type, **kwargs):
+    """ Generates a custom Tkinter event.
+    Args:
+      event_type: The type of the event, as a string.
+      All other keyword arguments will be used as event attributes. """
+    self.__window.event_generate(event_type, **kwargs)
+
+
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
 
