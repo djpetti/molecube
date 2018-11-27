@@ -63,7 +63,7 @@ class Cube(object):
 
   # Base cube size, in px.
   CUBE_SIZE = 200
-  CUBE_OFFSET = CUBE_SIZE//2
+  CUBE_OFFSET = CUBE_SIZE // 2
 
   # Currently selected cube. There can be only one.
   _selected = None
@@ -72,7 +72,7 @@ class Cube(object):
     """
     Args:
       canvas: The canvas to draw the cube on.
-      pos: The initial position of the cube.
+      idx: The index where the new cube is located.
       color: The color of the cube. """
     self.__canvas = canvas
     self.__idx = idx
@@ -223,10 +223,10 @@ class Cube(object):
     y *= Cube.CUBE_SIZE
     x += Cube.CUBE_OFFSET
     y += Cube.CUBE_OFFSET
-    self.set_pos(x, y)
+    self._set_pos(x, y)
     self.update_connections(others)
 
-  def set_pos(self, x, y):
+  def _set_pos(self, x, y):
     """ Sets the pixel position of the cube.
     Args:
       x: The new x position.
@@ -315,7 +315,7 @@ class Cube(object):
     """ Snap this cube to grid.
       Args:
         grid_size: pixel size of grid as (w, h)
-        others: List of other cubes the current cube can snap to
+        others: 2D Array representing all cubes in their locations
         offsest: offset of the snap grid in pixels (x, y) """
 
     # Snap to proper position
@@ -326,15 +326,15 @@ class Cube(object):
 
     # makes sure no cube is in the way, moves the cube if so
     (x1, y1) = self.__idx
-    x2 = (new_x - Cube.CUBE_OFFSET)//Cube.CUBE_SIZE
-    y2 = (new_y - Cube.CUBE_OFFSET)//Cube.CUBE_SIZE
-    c = others[y2][x2]
+    x2 = (new_x - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
+    y2 = (new_y - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
+    swap_cube = others[y2][x2]
     others[y2][x2] = self
-    others[y1][x1] = c
+    others[y1][x1] = swap_cube
 
-    if c:
-        c.__clear_connections()
-        c.set_idx(x1, y1, others)
+    if swap_cube:
+        swap_cube.__clear_connections()
+        swap_cube.set_idx(x1, y1, others)
 
     self.set_idx(x2, y2, others)
 
