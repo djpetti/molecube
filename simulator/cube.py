@@ -63,18 +63,28 @@ class Cube(object):
 
   # Base cube size, in px.
   CUBE_SIZE = 200
+  CUBE_OFFSET = CUBE_SIZE // 2
 
   # Currently selected cube. There can be only one.
   _selected = None
 
-  def __init__(self, canvas, pos, color):
+  def __init__(self, canvas, idx, color):
     """
     Args:
       canvas: The canvas to draw the cube on.
-      pos: The initial position of the cube.
+      idx: The index where the new cube is located.
       color: The color of the cube. """
     self.__canvas = canvas
-    self.__pos = pos
+    self.__idx = idx
+
+    # Determine position from index
+    (x, y) = self.__idx
+    x *= Cube.CUBE_SIZE
+    y *= Cube.CUBE_SIZE
+    x += Cube.CUBE_OFFSET
+    y += Cube.CUBE_OFFSET
+    self.__pos = (x, y)
+
     self.__color = color
 
     # Whether the cube is currently being dragged.
@@ -128,7 +138,6 @@ class Cube(object):
     self.__dragging = True
     # The cube is now selected.
     Cube._selected = self
-
     # As soon as the cube is selected, all connections are broken.
     self.__clear_connections()
     # When moving, keeps track of the previous mouse position.
@@ -204,8 +213,21 @@ class Cube(object):
     case = self.__cube_shapes[0]
     return case.get_pos()
 
-  def set_pos(self, x, y):
-    """ Sets the position of the cube.
+  def set_idx(self, x, y, others):
+    """ Sets the index position of the cube.
+    Args:
+      x: The new x position.
+      y: The new y position. """
+    self.__idx = (x, y)
+    x *= Cube.CUBE_SIZE
+    y *= Cube.CUBE_SIZE
+    x += Cube.CUBE_OFFSET
+    y += Cube.CUBE_OFFSET
+    self._set_pos(x, y)
+    self.update_connections(others)
+
+  def _set_pos(self, x, y):
+    """ Sets the pixel position of the cube.
     Args:
       x: The new x position.
       y: The new y position. """
@@ -213,6 +235,7 @@ class Cube(object):
     old_x, old_y = self.get_pos()
     move_x = x - old_x
     move_y = y - old_y
+    self.__pos = (x, y)
 
     for shape in self.__cube_shapes:
       shape.move(move_x, move_y)
@@ -292,44 +315,42 @@ class Cube(object):
     """ Snap this cube to grid.
       Args:
         grid_size: pixel size of grid as (w, h)
-        others: List of other cubes the current cube can snap to
+        others: 2D Array representing all cubes in their locations
         offsest: offset of the snap grid in pixels (x, y) """
 
     # Snap to proper position
     old_pos = self.get_pos()
+    old_idx = self.__idx
     new_x = old_pos[0] - old_pos[0] % grid_size + offset
     new_y = old_pos[1] - old_pos[1] % grid_size + offset
 
-    #makes sure no cube is in the way, moves the cube if so
-    updated = False
-    while not updated:
-      updated = True
-      for other in others:
-        other_x, other_y = other.get_pos()
-        if (other_x == new_x and other_y == new_y):
-          new_x += 200
-          updated = False
+    # makes sure no cube is in the way, moves the cube if so
+    (x1, y1) = self.__idx
+    x2 = (new_x - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
+    y2 = (new_y - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
+    swap_cube = others[y2][x2]
+    others[y2][x2] = self
+    others[y1][x1] = swap_cube
 
-    self.set_pos(new_x, new_y)
+    if swap_cube:
+        swap_cube.__clear_connections()
+        swap_cube.set_idx(x1, y1, others)
 
-    # Check for cubes to snap for on each side
+    self.set_idx(x2, y2, others)
+
+  def update_connections(self, others):
+
+    # Check for cubes at each side
     for side in Cube.Sides.all():
       shift = Cube.Sides.coordinates(side)
-      shift = (shift[0] * grid_size, shift[1] * grid_size)
+      other_x, other_y = shift[0] + self.__idx[0], shift[1] + self.__idx[1]
+      other = others[other_y][other_x]
 
-      # for each cube
-      for other in others:
-        other_x, other_y = other.get_pos()
-        my_x, my_y = self.get_pos()
-
-        # If other cube is adjacent, add connection
-        if other_x == my_x + shift[0] and other_y == my_y + shift[1]:
+      # If a cube exists on this side, add connections
+      if other:
           self_changed = self.__add_connection(other, side)
           other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
           if self_changed:
             self.__config_changed_hook()
           if other_changed:
             other.__config_changed_hook()
-
-          # Break so only the first connection is added
-          break

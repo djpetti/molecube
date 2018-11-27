@@ -155,7 +155,6 @@ class Canvas(GuiObject):
       color: The color to set it to. """
     self.__canvas.config(bg=color)
 
-
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
 
