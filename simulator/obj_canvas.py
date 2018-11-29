@@ -155,9 +155,6 @@ class Canvas(GuiObject):
       color: The color to set it to. """
     self.__canvas.config(bg=color)
 
-  def add_line(self, x_1, y_1, x_2, y_2):
-    return self.__canvas.create_line( x_1, y_1, x_2, y_2)
-
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
 
