@@ -158,18 +158,15 @@ class Canvas(GuiObject):
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
 
-  def __init__(self, canvas, pos, fill=None, outline="black"):
+  def __init__(self, canvas, fill=None, outline="black"):
     """
     Args:
       canvas: The Canvas to draw on.
-      pos: The center position of the object.
       fill: The fill color of the object. """
     self._canvas = canvas
 
     # Keeps track of the reference for this object.
     self._reference = None
-    # Keeps track of the object's center position.
-    self._pos_x, self._pos_y = pos
     # The object's fill color.
     self._fill = fill
     # The object's outline color.
@@ -219,44 +216,12 @@ class CanvasObject(GuiObject):
 
     return False
 
-  def set_pos(self, new_x, new_y):
-    """ Moves the object to a new position.
-    Args:
-      new_x: The new x position.
-      new_y: The new y position. """
-    move_x = new_x - self._pos_x
-    move_y = new_y - self._pos_y
-
-    # Update the position.
-    self._pos_x = new_x
-    self._pos_y = new_y
-
-    self._canvas.move_object(self._reference, move_x, move_y)
-    self._canvas.update()
-
-  def get_pos(self):
-    """
-    Returns:
-      The position of the object. """
-    return (self._pos_x, self._pos_y)
 
   def set_fill(self, fill):
     """ Changes the fill of the object. """
     canvas = self._canvas.get_raw_canvas()
     canvas.itemconfig(self._reference, fill=fill)
     self._canvas.update()
-
-  def move(self, x_shift, y_shift):
-    """ Moves an object by a certain amount. It does not update the canvas
-    afterwards.
-    Args:
-      x_shift: How far to move in the x direction.
-      y_shift: How far to move in the y direction. """
-    # Update the position.
-    self._pos_x += x_shift
-    self._pos_y += y_shift
-
-    self._canvas.move_object(self._reference, x_shift, y_shift)
 
   def delete(self):
     """ Deletes the object from the canvas. """
@@ -307,7 +272,53 @@ class CanvasObject(GuiObject):
 
     return collision
 
-class Circle(CanvasObject):
+class Shape(CanvasObject):
+  """ Class that adds position functionality to CanvasObject"""
+
+  def __init__(self, canvas, pos, **kwargs):
+    """
+    Args:
+      canvas: The canvas to draw on.
+      pos: The center position of the shape.
+      The keyword arguments are passed transparently to the superclass constructor."""
+    # Keeps track of the object's center position.
+    self._pos_x, self._pos_y = pos
+    super(Shape, self).__init__(canvas, **kwargs)
+
+  def get_pos(self):
+    """
+    Returns:
+      The position of the object. """
+    return (self._pos_x, self._pos_y)
+
+  def set_pos(self, new_x, new_y):
+    """ Moves the object to a new position.
+    Args:
+      new_x: The new x position.
+      new_y: The new y position. """
+    move_x = new_x - self._pos_x
+    move_y = new_y - self._pos_y
+
+    # Update the position.
+    self._pos_x = new_x
+    self._pos_y = new_y
+
+    self._canvas.move_object(self._reference, move_x, move_y)
+    self._canvas.update()
+
+  def move(self, x_shift, y_shift):
+    """ Moves an object by a certain amount. It does not update the canvas
+    afterwards.
+    Args:
+      x_shift: How far to move in the x direction.
+      y_shift: How far to move in the y direction. """
+    # Update the position.
+    self._pos_x += x_shift
+    self._pos_y += y_shift
+
+    self._canvas.move_object(self._reference, x_shift, y_shift)
+
+class Circle(Shape):
   """ Draws a circle on the canvas. """
 
   def __init__(self, canvas, pos, radius, **kwargs):
@@ -340,7 +351,7 @@ class Circle(CanvasObject):
 
     return (p1_x, p1_y, p2_x, p2_y)
 
-class Rectangle(CanvasObject):
+class Rectangle(Shape):
   """ Draws a rectangle on the canvas. """
 
   def __init__(self, canvas, pos, size, **kwargs):
@@ -372,7 +383,7 @@ class Rectangle(CanvasObject):
 
     return (p1_x, p1_y, p2_x, p2_y)
 
-class Text(CanvasObject):
+class Text(Shape):
   """ Draws text on the canvas. """
 
   def __init__(self, canvas, pos, text, font, **kwargs):
@@ -403,3 +414,27 @@ class Text(CanvasObject):
   def get_bbox(self):
     # TODO (danielp): Real bounding box calculation.
     return (self._pos_x, self._pos_y, self._pos_x, self._pos_y)
+
+class Line(CanvasObject):
+  """ Extends functionality of CanvasObject to draw lines"""
+
+  def __init__(self, canvas, pos1, pos2, **kwargs):
+    """
+    Args:
+      canvas: The canvas to draw on.
+      pos1: The position of one end of the line.
+      pos2: The position of the other end of the line."""
+
+    self._x_1, self._y_1 = pos1
+    self._x_2, self._y_2 = pos2
+
+    super(Line, self).__init__(canvas, **kwargs)
+
+  def _draw_object(self):
+    """ Draw the Line on the canvas. """
+    # Get the raw canvas to draw with.
+    canvas = self._canvas.get_raw_canvas()
+    self._reference = canvas.create_line( self._x_1, self._y_1, self._x_2, self._y_2)
+
+  def get_bbox(self):
+    return(self._x_1, self._y_1, self._x_2, self._y_2)

@@ -2,7 +2,7 @@ import colors
 import obj_canvas
 
 
-class Display(obj_canvas.CanvasObject):
+class Display(obj_canvas.Shape):
   """ Simulates the display hardware for the cube. """
   # TODO (danielp): Re-implement this with a better class hierarchy, possibly
   # with a generic "Container" superclass.
