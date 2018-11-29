@@ -154,7 +154,7 @@ class Canvas(GuiObject):
     Args:
       color: The color to set it to. """
     self.__canvas.config(bg=color)
-  
+
   def add_line(self, x_1, y_1, x_2, y_2):
     return self.__canvas.create_line( x_1, y_1, x_2, y_2)
 
@@ -165,7 +165,6 @@ class CanvasObject(GuiObject):
     """
     Args:
       canvas: The Canvas to draw on.
-      pos: The center position of the object.
       fill: The fill color of the object. """
     self._canvas = canvas
 
@@ -275,26 +274,26 @@ class CanvasObject(GuiObject):
       collision[1] = True
 
     return collision
-    
+
 class Shape(CanvasObject):
   """ Class that adds position functionality to CanvasObject"""
-  
+
   def __init__(self, canvas, pos, **kwargs):
     """
     Args:
       canvas: The canvas to draw on.
-      pos: The center position of the shape."""
+      pos: The center position of the shape.
+      The keyword arguments are passed transparently to the superclass constructor."""
     # Keeps track of the object's center position.
     self._pos_x, self._pos_y = pos
     super(Shape, self).__init__(canvas, **kwargs)
-    
-    
+
   def get_pos(self):
     """
     Returns:
       The position of the object. """
     return (self._pos_x, self._pos_y)
-    
+
   def set_pos(self, new_x, new_y):
     """ Moves the object to a new position.
     Args:
@@ -309,7 +308,7 @@ class Shape(CanvasObject):
 
     self._canvas.move_object(self._reference, move_x, move_y)
     self._canvas.update()
-    
+
   def move(self, x_shift, y_shift):
     """ Moves an object by a certain amount. It does not update the canvas
     afterwards.
@@ -321,7 +320,7 @@ class Shape(CanvasObject):
     self._pos_y += y_shift
 
     self._canvas.move_object(self._reference, x_shift, y_shift)
-  
+
 class Circle(Shape):
   """ Draws a circle on the canvas. """
 
@@ -421,24 +420,24 @@ class Text(Shape):
 
 class Line(CanvasObject):
   """ Extends functionality of CanvasObject to draw lines"""
-  
+
   def __init__(self, canvas, pos1, pos2, **kwargs):
     """
     Args:
       canvas: The canvas to draw on.
       pos1: The position of one end of the line.
       pos2: The position of the other end of the line."""
-  
+
     self._x_1, self._y_1 = pos1
     self._x_2, self._y_2 = pos2
-    
+
     super(Line, self).__init__(canvas, **kwargs)
-   
+
   def _draw_object(self):
     """ Draw the Line on the canvas. """
     # Get the raw canvas to draw with.
     canvas = self._canvas.get_raw_canvas()
     self._reference = canvas.create_line( self._x_1, self._y_1, self._x_2, self._y_2)
-  
+
   def get_bbox(self):
     return(self._x_1, self._y_1, self._x_2, self._y_2)

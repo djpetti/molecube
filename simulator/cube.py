@@ -138,6 +138,7 @@ class Cube(object):
     self.__dragging = True
     # The cube is now selected.
     Cube._selected = self
+
     # As soon as the cube is selected, all connections are broken.
     self.__clear_connections()
     # When moving, keeps track of the previous mouse position.
