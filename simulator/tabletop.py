@@ -14,7 +14,6 @@ class Tabletop(object):
   GRID_WIDTH, GRID_HEIGHT = 8, 4
   GRID_OFFSET = GRID_SIZE / 2
 
-
   def __init__(self):
     # List of cubes.
     self.__cubes = [[None for x in range(Tabletop.GRID_WIDTH)]
