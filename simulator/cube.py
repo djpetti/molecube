@@ -339,11 +339,21 @@ class Cube(object):
     self.set_idx(x2, y2, others)
 
   def update_connections(self, others):
+    # Maximum size of the grid.
+    max_height = len(others)
+    max_width = len(others[0])
 
     # Check for cubes at each side
     for side in Cube.Sides.all():
       shift = Cube.Sides.coordinates(side)
       other_x, other_y = shift[0] + self.__idx[0], shift[1] + self.__idx[1]
+      if (other_x >= max_width or other_x < 0):
+        # X dimension is out of range.
+        continue
+      if (other_y >= max_height or other_y < 0):
+        # Y dimension is out of range.
+        continue
+
       other = others[other_y][other_x]
 
       # If a cube exists on this side, add connections
