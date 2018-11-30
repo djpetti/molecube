@@ -160,7 +160,7 @@ class Cube(object):
     Returns:
       True if the configuration changed, false otherwise. """
     if self.__connected[side] == other:
-      return
+      return False
 
     self.__connected[side] = other
     return True
@@ -339,18 +339,28 @@ class Cube(object):
     self.set_idx(x2, y2, others)
 
   def update_connections(self, others):
+    # Maximum size of the grid.
+    max_height = len(others)
+    max_width = len(others[0])
 
     # Check for cubes at each side
     for side in Cube.Sides.all():
       shift = Cube.Sides.coordinates(side)
       other_x, other_y = shift[0] + self.__idx[0], shift[1] + self.__idx[1]
+      if (other_x >= max_width or other_x < 0):
+        # X dimension is out of range.
+        continue
+      if (other_y >= max_height or other_y < 0):
+        # Y dimension is out of range.
+        continue
+
       other = others[other_y][other_x]
 
       # If a cube exists on this side, add connections
       if other:
-          self_changed = self.__add_connection(other, side)
-          other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
-          if self_changed:
-            self.__config_changed_hook()
-          if other_changed:
-            other.__config_changed_hook()
+        self_changed = self.__add_connection(other, side)
+        other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
+        if self_changed:
+          self.__config_changed_hook()
+        if other_changed:
+          other.__config_changed_hook()
