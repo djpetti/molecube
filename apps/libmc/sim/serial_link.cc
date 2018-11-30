@@ -10,23 +10,12 @@
 namespace libmc {
 namespace sim {
 
-SerialLink::SerialLink() {
-  // Initialize the OS serial layer.
-  os_ = new LinuxSerial;
-}
-
-SerialLink::SerialLink(LinuxSerialInterface *os_serial) : os_(os_serial) {
-  // We don't own this pointer.
-  own_os_ = false;
-}
+SerialLink::SerialLink(LinuxSerialInterface *os_serial) : os_(os_serial) {}
 
 SerialLink::~SerialLink() {
   // Close the serial device.
   if (IsOpen()) {
     (void)os_->Close(serial_);
-  }
-  if (own_os_) {
-    delete os_;
   }
 }
 

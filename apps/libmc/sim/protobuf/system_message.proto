@@ -3,7 +3,8 @@ option optimize_for = LITE_RUNTIME;
 
 package libmc.sim;
 
-message SystemAction {
+// Message defining system actions and states.
+message SystemMessage {
   // If set to true, specifies that we want to shut down the VM.
-  bool shut_down = 1;
+  bool shutdown = 1;
 }

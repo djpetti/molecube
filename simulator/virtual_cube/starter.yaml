@@ -1,0 +1,3 @@
+# List of binaries to be run by the starter.
+binaries:
+  - "cube_bin/apps/libmc/sim/simulator_process"

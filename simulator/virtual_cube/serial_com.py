@@ -1,9 +1,8 @@
 import collections
 import logging
+import socket
 
-import serial
-
-from apps.libmc.sim.protobuf import system_action_pb2
+from apps.libmc.sim.protobuf import sim_message_pb2
 
 import cows
 
@@ -14,8 +13,6 @@ logger = logging.getLogger(__name__)
 class SerialCom(object):
   """ Manages the serial link with the virtual cube. """
 
-  # Baudrate to use for serial connections.
-  _BAUDRATE = 115200
   # Separator for serial messages.
   _SEPARATOR = b"\x00\x00"
 
@@ -23,8 +20,9 @@ class SerialCom(object):
     """
     Args:
       serial_fd: The serial FD to connect to the cube VM on. """
-    logger.info("Connecting to serial device %s." % (serial_fd))
-    self.__serial = serial.Serial(serial_fd, self._BAUDRATE)
+    logger.info("Connecting to socket device %s." % (serial_fd))
+    self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    self.__socket.connect(serial_fd)
 
     # Whether we've found a packet boundary yet.
     self.__packet_synced = False
@@ -44,17 +42,17 @@ class SerialCom(object):
 
     while remaining > 0:
       partial = message[-remaining:]
-      remaining -= self.__serial.write(partial)
+      remaining -= self.__socket.send(partial)
 
   def __sync_to_packet(self):
     """ Synchronizes to the packet separator. """
     logger.debug("Synchronizing to packets...")
 
     # Try to read the packet separator.
-    read = self.__serial.read(2)
+    read = self.__socket.recv(2)
     while read != self._SEPARATOR:
       read = read[-1]
-      read += self.__serial.read(1)
+      read += self.__socket.recv(1)
 
   def __read_until_separator(self):
     """ Reads data until it finds a separator. """
@@ -67,10 +65,8 @@ class SerialCom(object):
         read_this_round = self.__data[-1:]
         self.__data.pop()
 
-      # Start off by reading a single byte.
-      read_this_round.extend(self.__serial.read(1))
-      # Read anything that is in there with it.
-      read_this_round.extend(self.__serial.read(self.__serial.in_waiting))
+      # Read anything that is available.
+      read_this_round.extend(self.__socket.recv())
 
       while self._SEPARATOR in read_this_round:
         # We found the end.
@@ -93,12 +89,14 @@ class SerialCom(object):
 
     # Serialize the message.
     bin_message = message.SerializeToString()
+    # Add the overhead word for COWS.
+    bin_message = bytearray(2) + bytearray(bin_message)
     # Stuff the message.
     cows.cows_stuff(bin_message)
     # Add the separator at the end.
-    bin_message += self._SEPARATOR
+    complete_message = bin_message + self._SEPARATOR
 
-    self.__write_all(bin_message)
+    self.__write_all(complete_message)
 
   def read_message(self):
     """ Reads a Protobuf message from the serial port.
@@ -119,9 +117,9 @@ class SerialCom(object):
 
     # Unstuff the message.
     cows.cows_unstuff(bin_message)
-    # Deserialize the message.
-    message = system_action_pb2.SystemAction()
-    message.ParseFromString(bin_message)
+    # Deserialize the message, skipping the overhead word.
+    message = sim_message_pb2.SimMessage()
+    message.ParseFromString(bin_message[2:])
 
     logger.debug("Read message: %s" % (str(message)))
 

@@ -3,11 +3,22 @@ jobs:
   build:
     working_directory: /molecube
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: docker:stable-git
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
+      - run:
+          name: Git LFS (install Git Large File Storage)
+          command: |
+            apk update
+            apk add git-lfs openssh-client
+            git lfs install
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+            ssh git@github.com git-lfs-authenticate \
+                "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" download
+            git lfs pull
       - run:
           name: Build application docker image.
           command: |

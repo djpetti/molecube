@@ -2,9 +2,30 @@ import gzip
 import logging
 import os
 import subprocess
+import time
+
+from apps.libmc.sim.protobuf import sim_message_pb2
+
+import serial_com
 
 
 logger = logging.getLogger(__name__)
+
+
+def _has_child_process(func):
+    """ Decorator that first checks to make sure that we have a child process
+    before running func.
+    Args:
+      func: The function to decorate. """
+    def wrapper(*args):
+      # Expect the first argument to be the instance.
+      self = args[0]
+      if not self._child_process:
+        raise RuntimeError("Cannot call this with attached process.")
+
+      func(*args)
+
+    return wrapper
 
 
 class CubeVm(object):
@@ -22,7 +43,11 @@ class CubeVm(object):
   # Internal counter to use for generating unique cube IDs.
   _CUBE_ID = 0
 
-  def __init__(self):
+  def __init__(self, attach_to=None):
+    """
+    Args:
+      attach_to: When set to a serial handle, it will attach to that
+                 currently-running instance instead of creating a new one. """
     # No currently-running process.
     self.__process = None
 
@@ -32,8 +57,22 @@ class CubeVm(object):
     # Assign a name for the serial port.
     self.__serial_name = "cube%d" % (self.__id)
 
+    # Manages communication over the serial link. We initialize this upon
+    # creation of the VM.
+    self.__serial = None
+
     # Extract the disk image if necessary.
     self.__extract_disk_image()
+
+    self._child_process = True
+    if attach_to:
+      # Attach to a running instance.
+      logger.info("Attaching to instance '%s'." % (attach_to))
+      self.__serial_name = attach_to
+      self._child_process = False
+
+      # Create the serial link manager.
+      self.__serial = serial_com.SerialCom(self.get_serial())
 
   def __make_serial_options(self, name):
     """ Creates the QEMU CLI option list for the virtual serial device.
@@ -60,8 +99,12 @@ class CubeVm(object):
         uncompressed_file.write(image_content)
       uncompressed_file.close()
 
+  @_has_child_process
   def start(self):
     """ Starts the cube VM running. """
+    if self.__process is not None:
+      raise RuntimeError("Process is already started.")
+
     command = [self._QEMU_BIN, "-readconfig", self._QEMU_CONFIG, "-nographic"]
     # Add serial options.
     options = self.__make_serial_options(self.__serial_name)
@@ -73,20 +116,41 @@ class CubeVm(object):
                                       stdout=subprocess.PIPE)
     logger.info("Started cube VM %d." % (self.__id))
 
+    # Wait for the serial interface to exist.
+    logger.debug("Waiting for serial...")
+    while not os.path.exists(self.get_serial()):
+      time.sleep(1)
+
+    # Create the serial link manager.
+    self.__serial = serial_com.SerialCom(self.get_serial())
+
   def stop(self):
     """ Halts the cube VM. """
-    if self.__process is None:
+    if (self._child_process and self.__process is None):
       # Process is not running.
       return
 
-    # Terminate the process.
+    # Terminate the process. We do this by sending a special shutdown message.
     logger.info("Terminating cube VM %d." % (self.__id))
-    self.__process.communicate("\nhalt\n")
+    sim_message = sim_message_pb2.SimMessage()
+    sim_message.system.shutdown = True
 
-    self.__process = None
+    self.send_message(sim_message)
+
+    if self._child_process:
+      # Wait for the child to terminate.
+      logger.info("Waiting for VM to exit...")
+      self.__process.wait()
+      self.__process = None
 
   def get_serial(self):
     """ Gets the serial FD for this cube.
     Returns:
       The serial FD for the cube. """
     return "/tmp/%s" % (self.__serial_name)
+
+  def send_message(self, message):
+    """ Sends a message to this cube.
+    Args:
+      message: The message to send. This must be a protobuf SimMessage. """
+    self.__serial.write_message(message)

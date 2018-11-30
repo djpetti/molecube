@@ -9,6 +9,7 @@
 
 #include "gtest/gtest.h"
 
+#include "apps/libmc/sim/linux_serial.h"
 #include "apps/libmc/sim/serial_link.h"
 
 // Needed for grantpt() and unlockpt().
@@ -25,6 +26,8 @@ namespace testing {
 // world."
 class SerialLinkPtyTest : public ::testing::Test {
  protected:
+  SerialLinkPtyTest() : link_(&backend_) {}
+
   virtual void SetUp() {
     // Create a new PTY device.
     ASSERT_TRUE(CreatePty());
@@ -96,6 +99,8 @@ class SerialLinkPtyTest : public ::testing::Test {
   // The FD of the PTY master.
   int pty_master_;
 
+  // Backend that we use for serial communication.
+  LinuxSerial backend_;
   // The serial link we are testing with.
   SerialLink link_;
 

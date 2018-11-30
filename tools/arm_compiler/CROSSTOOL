@@ -9,8 +9,8 @@ default_toolchain {
 }
 
 toolchain {
-  abi_version: "gcc_8.2.1"
-  abi_libc_version: "unknown"
+  abi_version: "gcc_7.3.1"
+  abi_libc_version: "2.25"
   builtin_sysroot: ""
   compiler: "gcc"
   host_system_name: "armeabi-v7a"
@@ -43,23 +43,48 @@ toolchain {
   tool_path { name: "objdump" path: "gcc_arm_linux_gnueabihf/arm-linux-gnueabihf-objdump" }
   tool_path { name: "strip" path: "gcc_arm_linux_gnueabihf/arm-linux-gnueabihf-strip" }
 
-  compiler_flag: "-mcpu=cortex-a5"
-  compiler_flag: "-mthumb"
+  compiler_flag: "-mabi=aapcs-linux"
   compiler_flag: "-march=armv7-a"
-
-  # Configure hardware floats.
   compiler_flag: "-mfloat-abi=hard"
-  compiler_flag: "-fsingle-precision-constant"
 
+  compiler_flag: "-nostdinc"
+	compiler_flag: "-isystem"
+  compiler_flag: "external/arm_gcc_linux_toolchain/arm-linux-gnueabihf/include/c++/7.3.1/arm-linux-gnueabihf"
   compiler_flag: "-isystem"
-  compiler_flag: "external/arm_gcc_linux_toolchain/lib/gcc/arm-linux-gnueabihf/8.2/include"
+  compiler_flag: "external/arm_gcc_linux_toolchain/arm-linux-gnueabihf/include/c++/7.3.1"
+	compiler_flag: "-isystem"
+  compiler_flag: "external/arm_gcc_linux_toolchain/include/c++/7.3.1/arm-linux-gnueabihf"
+	compiler_flag: "-isystem"
+  compiler_flag: "external/arm_gcc_linux_toolchain/include/c++/7.3.1/"
   compiler_flag: "-isystem"
-  compiler_flag: "external/arm_gcc_linux_toolchain/lib/gcc/arm-linux-gnueabihf/8.2/include-fixed"
+  compiler_flag: "external/arm_gcc_linux_toolchain/lib/gcc/arm-linux-gnueabihf/7.3.1/include"
   compiler_flag: "-isystem"
-  compiler_flag: "external/arm_gcc_linux_toolchain/arm-linux-gnueabihf/include"
+	compiler_flag: "external/arm_gcc_linux_toolchain/arm-linux-gnueabihf/libc/usr/include"
+  compiler_flag: "-isystem"
+  compiler_flag: "external/arm_gcc_linux_toolchain/lib/gcc/arm-linux-gnueabihf/7.3.1/include-fixed"
+	compiler_flag: "-isystem"
+	compiler_flag: "external/arm_gcc_linux_toolchain/arm-linux-gnueabihf/libc/usr/include"
 
-  linker_flag: "-mcpu=cortex-a5"
-  linker_flag: "-mthumb"
+	cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/include"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/libc/usr/include"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/libc/usr/lib/include"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/libc/lib/gcc/arm-linux-gnueabihf/7.3.1/include-fixed"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/include/c++/7.3.1"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/libc/lib/gcc/arm-linux-gnueabihf/7.3.1/include"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/libc/lib/gcc/arm-linux-gnueabihf/7.3.1/include-fixed"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/lib/gcc/arm-linux-gnueabihf/7.3.1/include"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/lib/gcc/arm-linux-gnueabihf/7.3.1/include-fixed"
+  cxx_builtin_include_directory: "%package(@arm_gcc_linux_toolchain//)%/arm-linux-gnueabihf/include/c++/7.3.1"
+
+  linker_flag: "-lstdc++"
+  linker_flag: "-Ltools/arm_compiler/gcc_arm_linux_gnueabihf/linker_scripts"
+  linker_flag: "-Lexternal/arm_gcc_linux_toolchain/arm-linux-gnueabihf/lib"
+  linker_flag: "-Lexternal/arm_gcc_linux_toolchain/arm-linux-gnueabihf/libc/lib"
+  linker_flag: "-Bexternal/arm_gcc_linux_toolchain/arm-linux-gnueabihf/bin"
+  linker_flag: "-Wl,--dynamic-linker=/lib/ld-linux-armhf.so.3"
+
+  linker_flag: "-mabi=aapcs-linux"
+  linker_flag: "-march=armv7-a"
   linker_flag: "-mfloat-abi=hard"
 
   # Anticipated future default.
@@ -80,9 +105,9 @@ toolchain {
   compiler_flag: "-fdiagnostics-color=always"
 
   # Removal of unused code and data at link time (can this increase binary size in some cases?).
-  compiler_flag: "-ffunction-sections"
-  compiler_flag: "-fdata-sections"
-  linker_flag: "-Wl,--gc-sections"
+  #compiler_flag: "-ffunction-sections"
+  #compiler_flag: "-fdata-sections"
+  #linker_flag: "-Wl,--gc-sections"
 
   compilation_mode_flags {
     mode: DBG

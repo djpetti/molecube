@@ -29,6 +29,7 @@ filegroup(
     '//tools/arm_compiler/gcc_arm_linux_gnueabihf:gcc',
     '//tools/arm_compiler/gcc_arm_linux_gnueabihf:ld',
     '//tools/arm_compiler/gcc_arm_linux_gnueabihf:ar',
+    '//tools/arm_compiler/gcc_arm_linux_gnueabihf:linker_scripts',
     '@arm_gcc_linux_toolchain//:compiler_pieces',
   ],
 )

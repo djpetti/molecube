@@ -66,6 +66,11 @@ filegroup(
 )
 
 filegroup(
+  name = 'linker_scripts',
+  srcs = glob(['linker_scripts/*.so']),
+)
+
+filegroup(
   name = 'tool-wrappers',
   srcs = [
     ':gcc',
