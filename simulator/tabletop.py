@@ -74,9 +74,9 @@ class Tabletop(object):
     cube = Cube(self.__canvas, (0, 0), color)
     x, y = 0, 0
     while self.__cubes[y][x]:
-        x += 1
-        cube.set_idx(x, y, self.__cubes)
+      x += 1
     self.__cubes[y][x] = cube
+    cube.set_idx(x, y, self.__cubes)
 
     return cube
 

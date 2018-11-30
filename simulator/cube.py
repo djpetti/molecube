@@ -160,7 +160,7 @@ class Cube(object):
     Returns:
       True if the configuration changed, false otherwise. """
     if self.__connected[side] == other:
-      return
+      return False
 
     self.__connected[side] = other
     return True
@@ -358,9 +358,9 @@ class Cube(object):
 
       # If a cube exists on this side, add connections
       if other:
-          self_changed = self.__add_connection(other, side)
-          other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
-          if self_changed:
-            self.__config_changed_hook()
-          if other_changed:
-            other.__config_changed_hook()
+        self_changed = self.__add_connection(other, side)
+        other_changed = other.__add_connection(self, Cube.Sides.opposite(side))
+        if self_changed:
+          self.__config_changed_hook()
+        if other_changed:
+          other.__config_changed_hook()
