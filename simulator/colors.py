@@ -10,7 +10,6 @@ SCREEN = "#35A6D4"
 # Button color.
 BUTTONS = "#051B24"
 
-
 # Simulator Colors
 BACKGROUND = "#595959"
 GRID = "#EEEEEE"
