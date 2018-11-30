@@ -24,7 +24,7 @@ class Tabletop(object):
     self.__drawngrid = False
 
     # Canvas on which to draw cubes.
-    self.__canvas = obj_canvas.Canvas()
+    self.__canvas = obj_canvas.Canvas(background = colors.BACKGROUND)
     # When we drag the mouse, we want to move the currently-selected cube.
     self.__canvas.bind_event(event.MouseDragEvent, self.__mouse_dragged)
     # When we release the mouse button, we want to clear the dragging state for
@@ -102,12 +102,12 @@ class Tabletop(object):
     window_x, window_y = self.__canvas.get_window_size()
     i = 0
     while i < window_x:
-      line = Line(self.__canvas,( i, 0), (i, window_y))
+      line = Line(self.__canvas, (i, 0), (i, window_y), fill = colors.GRID)
       grid.append(line)
       i += self.GRID_SIZE
     j = 0
     while j < window_y:
-      line = Line(self.__canvas,(0, j), (window_x, j))
+      line = Line(self.__canvas, (0, j), (window_x, j), fill = colors.GRID)
       grid.append(line)
       j += self.GRID_SIZE
     return grid

@@ -53,7 +53,7 @@ class GuiObject(object):
 class Canvas(GuiObject):
   """ Simple wrapper around Tkinter canvas. """
 
-  def __init__(self, window_width=None, window_height=None):
+  def __init__(self, window_width=None, window_height=None, background="white"):
     """
     Args:
       window_width: The width of the window.
@@ -67,6 +67,7 @@ class Canvas(GuiObject):
 
     self.__window_width = window_width
     self.__window_height = window_height
+    self.__background = background
     if window_width is None:
       # Use the full screen width.
       self.__window_width = self.__window.winfo_screenwidth()
@@ -76,6 +77,7 @@ class Canvas(GuiObject):
 
     self.__canvas = tk.Canvas(self.__window, width=self.__window_width,
                               height=self.__window_height)
+    self.__canvas.configure(background=self.__background)
     self.__canvas.pack()
 
     self.update()
@@ -434,7 +436,7 @@ class Line(CanvasObject):
     """ Draw the Line on the canvas. """
     # Get the raw canvas to draw with.
     canvas = self._canvas.get_raw_canvas()
-    self._reference = canvas.create_line( self._x_1, self._y_1, self._x_2, self._y_2)
+    self._reference = canvas.create_line(self._x_1, self._y_1, self._x_2, self._y_2, fill = self._fill)
 
   def get_bbox(self):
     return(self._x_1, self._y_1, self._x_2, self._y_2)
