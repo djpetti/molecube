@@ -1,4 +1,5 @@
 import logging
+import os
 import signal
 import subprocess
 import sys
@@ -42,6 +43,9 @@ class Starter(object):
 
     # List of binaries to run.
     self.__binaries = config_data["binaries"]
+    # Log directory for processes.
+    self.__log_dir = config_data["log_dir"]
+    logger.debug("Writing process logs to '%s'." % (self.__log_dir))
 
   def __start_binary(self, binary):
     """ Starts a particular binary.
@@ -49,10 +53,14 @@ class Starter(object):
       binary: The path to the binary. """
     logger.info("Starting binary '%s'." % (binary))
 
+    # Specify logging dir.
+    my_env = os.environ.copy()
+    my_env["GLOG_log_dir"] = self.__log_dir
+
     # We exectute binaries in a chroot to make sure we have the libraries that
     # we need.
     command = ["/usr/sbin/chroot", "/cube_root", binary]
-    process = subprocess.Popen(command)
+    process = subprocess.Popen(command, env=my_env)
     self.__processes.add(process)
 
     logger.debug("Pid: %d" % (process.pid))
@@ -73,8 +81,8 @@ class Starter(object):
     for process in self.__processes:
       code = process.wait()
       if code != 0:
-        logger.error("Process %d exited with non-zero code %d." % \
-                     (process.pid, code))
+        logger.warning("Process %d exited with non-zero code %d." % \
+                       (process.pid, code))
 
     logger.info("All processes terminated.")
 

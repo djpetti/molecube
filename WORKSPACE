@@ -27,10 +27,10 @@ new_http_archive(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
-	name = "build_stack_rules_proto",
-	urls = ["https://github.com/stackb/rules_proto/archive/1d6550fc2e62.tar.gz"],
-	sha256 = "113e6792f5b20679285c86d91c163cc8c4d2b4d24d7a087ae4f233b5d9311012",
-	strip_prefix = "rules_proto-1d6550fc2e625d47dc4faadac92d7cb20e3ba5c5",
+  name = "build_stack_rules_proto",
+  urls = ["https://github.com/stackb/rules_proto/archive/1d6550fc2e62.tar.gz"],
+  sha256 = "113e6792f5b20679285c86d91c163cc8c4d2b4d24d7a087ae4f233b5d9311012",
+  strip_prefix = "rules_proto-1d6550fc2e625d47dc4faadac92d7cb20e3ba5c5",
 )
 
 load("@build_stack_rules_proto//python:deps.bzl", "python_proto_library")
@@ -42,10 +42,27 @@ load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip_import")
 pip_repositories()
 
 pip_import(
-	name = "protobuf_py_deps",
-	requirements = "@build_stack_rules_proto//python/requirements:protobuf.txt",
+  name = "protobuf_py_deps",
+  requirements = "@build_stack_rules_proto//python/requirements:protobuf.txt",
 )
 
 load("@protobuf_py_deps//:requirements.bzl", protobuf_pip_install = "pip_install")
 
 protobuf_pip_install()
+
+# Gflags git repo.
+http_archive(
+  name = "com_github_gflags_gflags",
+  strip_prefix = "gflags-2.2.2",
+  urls = [
+    "https://mirror.bazel.build/github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+    "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+  ],
+)
+
+# GLog git repo.
+git_repository(
+  name = "com_google_glog",
+  remote = "https://github.com/google/glog",
+  commit = "781096619d3dd368cfebd33889e417a168493ce7",
+)

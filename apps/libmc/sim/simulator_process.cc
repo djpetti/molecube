@@ -1,5 +1,7 @@
 #include "simulator_process.h"
 
+#include "glog/logging.h"
+
 #include "google/protobuf/message.h"
 
 #include "apps/libmc/core/events/system_event_dispatcher.h"
@@ -51,6 +53,8 @@ bool SimulatorProcess::SetUp() {
 }
 
 bool SimulatorProcess::HandleSerialMessage() {
+  VLOG(1) << "Waiting to receive message.";
+
   // Wait for the next message from the serial.
   SimMessage message;
   if (!com_->ReceiveMessage(&message)) {
@@ -60,6 +64,7 @@ bool SimulatorProcess::HandleSerialMessage() {
 
   // Check if any of the submessages were set and dispatch them if they were.
   if (message.has_system()) {
+    LOG(INFO) << "Dispatching system message.";
     dispatcher_->DispatchMessage(&message.system());
   }
 
