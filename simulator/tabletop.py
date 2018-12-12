@@ -1,33 +1,28 @@
 import sys
 
-import colors
 import display
 import event
 import obj_canvas
-from config import *
 from cube import Cube
 from obj_canvas import Line
 
 class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
 
-  GRID_SIZE = Cube.CUBE_SIZE
-  GRID_WIDTH, GRID_HEIGHT = 8, 4
-  GRID_OFFSET = GRID_SIZE / 2
 
   def __init__(self):
     log.logger.info("creating new tabletop")
 
     # List of cubes.
-    self.__cubes = [[None for x in range(Tabletop.GRID_WIDTH)]
-                     for y in range(Tabletop.GRID_HEIGHT)]
+    self.__cubes = [[None for x in range(int(config.get('CUBE', 'GRID_WIDTH')))]
+                     for y in range(int(config.get('CUBE', 'GRID_HEIGHT')))]
 
     # List of lines making up the grid
     self.__grid = []
     self.__drawngrid = False
 
     # Canvas on which to draw cubes.
-    self.__canvas = obj_canvas.Canvas(background = colors.BACKGROUND)
+    self.__canvas = obj_canvas.Canvas(background = config.get('COLORS', 'BACKGROUND'))
     # When we drag the mouse, we want to move the currently-selected cube.
     self.__canvas.bind_event(event.MouseDragEvent, self.__mouse_dragged)
     # When we release the mouse button, we want to clear the dragging state for
@@ -43,9 +38,9 @@ class Tabletop(object):
       return
 
     # Places the cube
-    selected_cube.snap_to_grid(Tabletop.GRID_SIZE,
+    selected_cube.snap_to_grid(int(config.get('CUBE', 'CUBE_SIZE')),
                                self.__cubes,
-                               offset = Tabletop.GRID_OFFSET)
+                               offset = int(config.get('CUBE', 'GRID_OFFSET')))
     selected_cube.clear_drag()
 
     # Clear the grid
@@ -68,7 +63,7 @@ class Tabletop(object):
     # Move the cube.
     selected_cube.drag(event)
 
-  def make_cube(self, color=Cube.Colors.RED):
+  def make_cube(self, color=config.get('COLORS', 'CUBE_RED')):
     """ Adds a new cube to the canvas.
     Args:
       color: The color of the cube.
@@ -115,14 +110,14 @@ class Tabletop(object):
     window_x, window_y = self.__canvas.get_window_size()
     i = 0
     while i < window_x:
-      line = Line(self.__canvas, (i, 0), (i, window_y), fill = colors.GRID)
+      line = Line(self.__canvas, (i, 0), (i, window_y), fill = config.get('COLORS', 'GRID'))
       grid.append(line)
-      i += self.GRID_SIZE
+      i += int(config.get('CUBE', 'CUBE_SIZE'))
     j = 0
     while j < window_y:
-      line = Line(self.__canvas, (0, j), (window_x, j), fill = colors.GRID)
+      line = Line(self.__canvas, (0, j), (window_x, j), fill = config.get('COLORS', 'GRID'))
       grid.append(line)
-      j += self.GRID_SIZE
+      j += int(config.get('CUBE', 'CUBE_SIZE'))
     return grid
 
   def clear_grid(self):

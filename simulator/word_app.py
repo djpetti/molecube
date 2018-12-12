@@ -2,7 +2,6 @@ import time
 
 from application import Application
 from tabletop import Cube
-from config import *
 
 
 class WordGameLetter(Application):
@@ -147,7 +146,7 @@ class WordGameChecker(Application):
       self.draw_text("GOOD", (0, 0), 24)
 
       # Flash the display gold.
-      flash_color = CUBE_GOLD
+      flash_color = config.get('COLORS', 'CUBE_GOLD')
 
     else:
       # Word is invalid.
@@ -155,7 +154,7 @@ class WordGameChecker(Application):
       self.draw_text("BAD", (0, 0), 24)
 
       # Flash the display red.
-      flash_color = CUBE_RED
+      flash_color = config.get('COLORS', 'CUBE_RED')
 
     # Do the flash.
     self.set_background_color(flash_color)
@@ -164,10 +163,10 @@ class WordGameChecker(Application):
     message = {"type": "flash", "color": flash_color}
     self.send_message(side, message)
     time.sleep(1)
-    message["color"] = SCREEN
+    message["color"] = config.get('COLORS', 'SCREEN')
     self.send_message(side, message)
 
-    self.set_background_color(SCREEN)
+    self.set_background_color(config.get('COLORS', 'SCREEN'))
 
   def on_reconfiguration(self, config):
     # If we connect the checker cube to something, we want to check the current
