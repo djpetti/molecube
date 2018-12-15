@@ -1,9 +1,13 @@
 #!/usr/bin/python
 
+# Import custom logger to initialize logging system. This must be done before
+# anything tries to use logging.
+import cube_logger
 
+
+import config
 import word_app
 import tabletop
-from config import *
 
 
 table = tabletop.Tabletop()

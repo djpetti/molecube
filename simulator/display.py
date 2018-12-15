@@ -1,5 +1,5 @@
+import config
 import obj_canvas
-from config import *
 
 
 class Display(obj_canvas.Shape):

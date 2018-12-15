@@ -1,17 +1,22 @@
+import logging
 import sys
 
+from cube import Cube
+from obj_canvas import Line
+import config
 import display
 import event
 import obj_canvas
-from cube import Cube
-from obj_canvas import Line
+
+
+logger = logging.getLogger(__name__)
+
 
 class Tabletop(object):
   """ Simulates a "tabletop" in which the cubes exist. """
 
-
   def __init__(self):
-    log.logger.info("creating new tabletop")
+    logger.info("Creating new tabletop")
 
     # List of cubes.
     self.__cubes = [[None for x in range(int(config.get('CUBE', 'GRID_WIDTH')))]
@@ -69,7 +74,7 @@ class Tabletop(object):
       color: The color of the cube.
     Returns:
       The cube that it made. """
-    log.logger.info("adding a cube to our tabletop")
+    logger.info("adding a cube to our tabletop")
 
     cube = Cube(self.__canvas, (0, 0), color)
     x, y = 0, 0
@@ -90,7 +95,7 @@ class Tabletop(object):
       app_type: The class of the app to start. """
 
     message = "starting " + str(app_type) + " on all cubes on our tabletop"
-    log.logger.info(message)
+    logger.info(message)
 
     for cube in self.__cubes:
       # Make a new instance for this cube.

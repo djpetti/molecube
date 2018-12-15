@@ -2,6 +2,7 @@ import time
 
 from application import Application
 from tabletop import Cube
+import config
 
 
 class WordGameLetter(Application):

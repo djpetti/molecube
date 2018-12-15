@@ -1,7 +1,12 @@
+import config
 import display
 import event
+import logging
 import obj_canvas
-import cube_logger
+
+
+logger = logging.getLogger(__name__)
+
 
 class Cube(object):
   """ Represents a single cube. """
@@ -57,11 +62,11 @@ class Cube(object):
   # Currently selected cube. There can be only one.
   _selected = None
 
-  def __init__(self, canvas, pos, color):
+  def __init__(self, canvas, idx, color):
     """
     Args:
       canvas: The canvas to draw the cube on.
-      idx: The index where the new cube is located.
+      idx: The grid indices where the new cube is located.
       color: The color of the cube. """
     self.__canvas = canvas
     self.__idx = idx
@@ -236,7 +241,7 @@ class Cube(object):
     self.__canvas.update()
 
     message = "cube changed position from " + str((old_x, old_y)) + " to " + str((x, y))
-    log.logger.info(message)
+    logger.info(message)
 
   def get_color(self):
     return self.__color
