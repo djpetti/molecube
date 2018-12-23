@@ -1,17 +1,15 @@
-import colors
+import config
 import display
 import event
+import logging
 import obj_canvas
+
+
+logger = logging.getLogger(__name__)
+
 
 class Cube(object):
   """ Represents a single cube. """
-
-  class Colors(object):
-    """ Represents cube colors. """
-
-    RED = colors.CUBE_RED
-    BLUE = colors.CUBE_BLUE
-    GOLD = colors.CUBE_GOLD
 
   class Sides(object):
     """ Represents cube sides. """
@@ -61,10 +59,6 @@ class Cube(object):
         A list of all sides """
       return cls._ALL
 
-  # Base cube size, in px.
-  CUBE_SIZE = 200
-  CUBE_OFFSET = CUBE_SIZE // 2
-
   # Currently selected cube. There can be only one.
   _selected = None
 
@@ -72,17 +66,17 @@ class Cube(object):
     """
     Args:
       canvas: The canvas to draw the cube on.
-      idx: The index where the new cube is located.
+      idx: The grid indices where the new cube is located.
       color: The color of the cube. """
     self.__canvas = canvas
     self.__idx = idx
 
     # Determine position from index
     (x, y) = self.__idx
-    x *= Cube.CUBE_SIZE
-    y *= Cube.CUBE_SIZE
-    x += Cube.CUBE_OFFSET
-    y += Cube.CUBE_OFFSET
+    x *= int(config.get('CUBE', 'CUBE_SIZE'))
+    y *= int(config.get('CUBE', 'CUBE_SIZE'))
+    x += int(config.get('CUBE', 'GRID_OFFSET'))
+    y += int(config.get('CUBE', 'GRID_OFFSET'))
     self.__pos = (x, y)
 
     self.__color = color
@@ -115,17 +109,20 @@ class Cube(object):
     x, y = self.__pos
 
     # Draw the actual cube shapes.
-    base_size = Cube.CUBE_SIZE
+    base_size = int(config.get('CUBE', 'CUBE_SIZE'))
     case = obj_canvas.Rectangle(self.__canvas, self.__pos,
                                 (base_size, base_size),
                                 fill=self.__color, outline=self.__color)
     self.__screen = display.Display(self.__canvas, (x, y - 20), (180, 140))
     button_l = obj_canvas.Rectangle(self.__canvas, (x - 65, y + 75), (50, 30),
-                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+                                    fill=config.get('COLORS', 'BUTTONS'),
+                                    outline=config.get('COLORS', 'BUTTONS'))
     button_c = obj_canvas.Rectangle(self.__canvas, (x, y + 75), (50, 30),
-                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+                                    fill=config.get('COLORS', 'BUTTONS'),
+                                    outline=config.get('COLORS', 'BUTTONS'))
     button_r = obj_canvas.Rectangle(self.__canvas, (x + 65, y + 75), (50, 30),
-                                    fill=colors.BUTTONS, outline=colors.BUTTONS)
+                                    fill=config.get('COLORS', 'BUTTONS'),
+                                    outline=config.get('COLORS', 'BUTTONS'))
 
     self.__cube_shapes.extend([case, self.__screen, button_l, button_c, button_r])
 
@@ -219,10 +216,10 @@ class Cube(object):
       x: The new x position.
       y: The new y position. """
     self.__idx = (x, y)
-    x *= Cube.CUBE_SIZE
-    y *= Cube.CUBE_SIZE
-    x += Cube.CUBE_OFFSET
-    y += Cube.CUBE_OFFSET
+    x *= int(config.get('CUBE', 'CUBE_SIZE'))
+    y *= int(config.get('CUBE', 'CUBE_SIZE'))
+    x += int(config.get('CUBE', 'GRID_OFFSET'))
+    y += int(config.get('CUBE', 'GRID_OFFSET'))
     self._set_pos(x, y)
     self.update_connections(others)
 
@@ -243,6 +240,12 @@ class Cube(object):
     # Update the canvas.
     self.__canvas.update()
 
+    message = "cube changed position from " + str((old_x, old_y)) + " to " + str((x, y))
+    logger.info(message)
+
+  def get_color(self):
+    return self.__color
+
   def get_display(self):
     """
     Returns:
@@ -255,6 +258,10 @@ class Cube(object):
       app: The class of the app to run. """
     self.__application = app
     self.__application.run(self)
+
+  def get_app(self):
+    """ return the app we are running"""
+    return self.__application
 
   def drag(self, event):
     """ Respond to a mouse drag while the cube is selected.
@@ -326,8 +333,12 @@ class Cube(object):
 
     # makes sure no cube is in the way, moves the cube if so
     (x1, y1) = self.__idx
-    x2 = (new_x - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
-    y2 = (new_y - Cube.CUBE_OFFSET) // Cube.CUBE_SIZE
+
+    offset = int(config.get("CUBE", "GRID_OFFSET"))
+    size = int(config.get("CUBE", "CUBE_SIZE"))
+
+    x2 = (new_x - offset) // size
+    y2 = (new_y - offset) // size
     swap_cube = others[y2][x2]
     others[y2][x2] = self
     others[y1][x1] = swap_cube

@@ -1,4 +1,4 @@
-import colors
+import config
 import obj_canvas
 
 
@@ -21,8 +21,9 @@ class Display(obj_canvas.Shape):
     self.__display_objs = []
 
     # Draw on the canvas.
-    super(Display, self).__init__(canvas, pos, fill=colors.SCREEN,
-                                  outline=colors.SCREEN)
+    super(Display, self).__init__(canvas, pos,
+                                  fill=config.get('COLORS', 'SCREEN'),
+                                  outline=config.get('COLORS', 'SCREEN'))
 
   def _draw_object(self):
     # Draw the background.
