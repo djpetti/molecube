@@ -71,5 +71,5 @@ git_repository(
 git_repository(
   name = "tachyon",
   remote = "https://github.com/djpetti/tachyon",
-  commit = "991fa7648b54c6d03bfe0d112a37d17dd2054d52",
+  commit = "4358d9adca976fe565e646fbdf139f7701e7a2a8",
 )

@@ -7,4 +7,4 @@ binaries:
 # start.
 log_dir: "/logs"
 # Location of SHM file.
-shm_file: "/run/shm/tachyon_core"
+shm_file: "/dev/shm/tachyon_core"
