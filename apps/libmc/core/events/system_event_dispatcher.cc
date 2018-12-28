@@ -2,35 +2,41 @@
 
 #include <assert.h>
 
-#include "apps/libmc/core/system_manager.h"
+#include "glog/logging.h"
+
+#include "tachyon/lib/queue.h"
+
+#include "apps/libmc/constants.h"
 #include "apps/libmc/sim/protobuf/system_message.pb.h"
 
 namespace libmc {
 namespace core {
 namespace events {
 
+using ::tachyon::QueueInterface;
+using ::tachyon::Queue;
+
 SystemEventDispatcher &SystemEventDispatcher::GetInstance() {
+  VLOG(1) << "Fetching queue: " << constants::kQueueNames.SysManagerQueue;
+
   // This is a slight abuse of the static keyword, but it makes our life easier
   // by guaranteeing that this will be created once and eventually destroyed.
-  static SystemEventDispatcher instance;
+  static const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue =
+      Queue<SystemEvent>::FetchProducerQueue(
+          constants::kQueueNames.SysManagerQueue);
+  static SystemEventDispatcher instance(queue);
   return instance;
 }
 
-SystemEventDispatcher::SystemEventDispatcher(SystemManagerInterface *manager)
-    : manager_(manager) {}
-
-SystemEventDispatcher::SystemEventDispatcher()
-    : SystemEventDispatcher(new SystemManager) {
-  // We own this manager.
-  own_manager_ = true;
+SystemEventDispatcher &SystemEventDispatcher::CreateWithQueue(
+    const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue) {
+  static SystemEventDispatcher instance(queue);
+  return instance;
 }
 
-SystemEventDispatcher::~SystemEventDispatcher() {
-  if (own_manager_) {
-    // We have to destroy it.
-    delete manager_;
-  }
-}
+SystemEventDispatcher::SystemEventDispatcher(
+    const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue)
+    : queue_(queue) {}
 
 bool SystemEventDispatcher::Dispatch(EventCommon *event) {
   // First, cast to the proper event type.
@@ -39,9 +45,12 @@ bool SystemEventDispatcher::Dispatch(EventCommon *event) {
   // Set the header fields.
   sys_event->Common.Type = EventType::SYSTEM;
 
-  // TODO (danielp): Switch to queue-based infrastructure.
-  if (sys_event->Shutdown) {
-    return manager_->Shutdown();
+  // Send the message.
+  if (!queue_->EnqueueBlocking(*sys_event)) {
+    // This really shouldn't fail unless we don't have a consumer, which would
+    // imply that the system manager process died.
+    LOG(ERROR) << "Enqueue failed. Is system_manager_process running?";
+    return false;
   }
 
   return true;

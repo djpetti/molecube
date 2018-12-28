@@ -66,3 +66,10 @@ git_repository(
   remote = "https://github.com/google/glog",
   commit = "781096619d3dd368cfebd33889e417a168493ce7",
 )
+
+# Tachyon.
+git_repository(
+  name = "tachyon",
+  remote = "https://github.com/djpetti/tachyon",
+  commit = "991fa7648b54c6d03bfe0d112a37d17dd2054d52",
+)

@@ -1,7 +1,10 @@
 # List of binaries to be run by the starter.
 binaries:
   - "cube_bin/apps/libmc/sim/simulator_process"
+  - "cube_bin/apps/libmc/core/system_manager_process"
 
 # Directory to which we should write output logs for the processes that we
 # start.
 log_dir: "/logs"
+# Location of SHM file.
+shm_file: "/run/shm/tachyon_core"

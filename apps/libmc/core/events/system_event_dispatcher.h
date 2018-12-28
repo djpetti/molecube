@@ -1,23 +1,18 @@
 #ifndef LIBMC_CORE_EVENTS_SYSTEM_EVENT_DISPATCHER_H_
 #define LIBMC_CORE_EVENTS_SYSTEM_EVENT_DISPATCHER_H_
 
+#include <memory>
+
 #include "google/protobuf/message_lite.h"
 
-#include "apps/libmc/core/system_manager_interface.h"
-#include "event.h"
+#include "tachyon/lib/queue_interface.h"
+
 #include "event_dispatcher_interface.h"
+#include "system_event.h"
 
 namespace libmc {
 namespace core {
 namespace events {
-
-// System event. This event handles commands to the base system.
-struct SystemEvent {
-  EventCommon Common;
-
-  // Whether we want to shutdown the system.
-  bool Shutdown;
-};
 
 // Dispatcher for System events.
 class SystemEventDispatcher : public EventDispatcherInterface {
@@ -26,12 +21,17 @@ class SystemEventDispatcher : public EventDispatcherInterface {
   // Returns:
   //  The singleton instance, creating it if necessary.
   static SystemEventDispatcher &GetInstance();
-
-  // Allows for dependency injection during testing.
+  // Allows for injection of the queue during testing. This will always create a
+  // new instance, thus breaking the singleton property. Therefore, it should
+  // only be used for testing.
   // Args:
-  //  manager: The SystemManager to use.
-  SystemEventDispatcher(SystemManagerInterface *manager);
-  virtual ~SystemEventDispatcher();
+  //  queue: The new queue to use for this instance.
+  // Returns:
+  //  The instance that it created.
+  static SystemEventDispatcher &CreateWithQueue(
+      const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue);
+
+  virtual ~SystemEventDispatcher() = default;
 
   // Disable copy and assignment.
   SystemEventDispatcher(SystemEventDispatcher const &other) = delete;
@@ -50,12 +50,13 @@ class SystemEventDispatcher : public EventDispatcherInterface {
 
  private:
   // Private constructor to force use of singleton.
-  SystemEventDispatcher();
+  // Args:
+  //  queue: The queue to send events to the system manager process on.
+  SystemEventDispatcher(
+      const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue);
 
-  // SystemManager instance that we use to execute commands.
-  SystemManagerInterface *manager_;
-  // Whether we own the manager object.
-  bool own_manager_ = false;
+  // Queue for communicating with the system manager process.
+  const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue_;
 };
 
 }  // namespace events

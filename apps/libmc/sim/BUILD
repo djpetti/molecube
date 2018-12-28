@@ -9,6 +9,7 @@ cc_library(
           "@com_google_protobuf//:protobuf_lite",
           "@com_google_glog//:glog"],
   visibility = ["//apps/libmc:__subpackages__"],
+  copts = ["-Iexternal/"],
 )
 
 cc_binary(
