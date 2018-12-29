@@ -16,5 +16,6 @@ test --test_output=errors
 # platform. Also, disable warnings about the naked attribute, which is largely
 # irrelevant for testing.
 test --copt -m32 --linkopt -m32 --copt -Wno-attributes
-# Enable all warnings.
-build --copt -Wall --copt -Werror --copt -Wunused-but-set-parameter
+# Enable all warnings, and use C++14.
+build --copt -Wall --copt -Werror --copt -Wunused-but-set-parameter \
+      --copt -std=c++14

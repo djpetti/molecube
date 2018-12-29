@@ -1,7 +1,7 @@
-#include "simulator_process.h"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+
+#include "simulator_process.h"
 
 int main(int argc, char **argv) {
   // Initialize logging.

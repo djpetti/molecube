@@ -11,12 +11,13 @@ cc_library(
 cc_test(
   name = "system_event_dispatcher_test",
   copts = ["-Iexternal/gtest/googletest/include",
-           "-Iexternal/gtest/googlemock/include"],
+           "-Iexternal/gtest/googlemock/include",
+           "-Iexternal/"],
   srcs = ["system_event_dispatcher_test.cc"],
   deps = ["//apps/libmc/core/events",
           "@gtest//:gtest",
           "@gtest//:gmock",
-          ":mocks"],
+          "@tachyon//:tachyon_test"],
   size = "small",
   restricted_to = ["//cpus:x86"],
 )

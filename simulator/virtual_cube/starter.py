@@ -32,6 +32,11 @@ class Starter(object):
     # Set of running processes.
     self.__processes = set([])
 
+    # Delete previous SHM if it's still hanging around.
+    if os.path.exists(self.__shm_file):
+      logger.info("Deleting existing SHM: %s" % (self.__shm_file))
+      os.remove(self.__shm_file)
+
   def __load_config(self, config):
     """ Loads the configuration from a file.
     Args:
@@ -46,6 +51,8 @@ class Starter(object):
     # Log directory for processes.
     self.__log_dir = config_data["log_dir"]
     logger.debug("Writing process logs to '%s'." % (self.__log_dir))
+
+    self.__shm_file = config_data["shm_file"]
 
   def __start_binary(self, binary):
     """ Starts a particular binary.

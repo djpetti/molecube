@@ -17,7 +17,13 @@ struct Simulator {
   uint32_t MaxPacketSize;
 };
 
+// Names to use for queues.
+struct QueueNames {
+  const char *SysManagerQueue;
+};
+
 constexpr Simulator kSimulator = {"/dev/vport1p1", 115200, 1024};
+constexpr QueueNames kQueueNames = {"SysManagerQueue"};
 
 // The buffer size should be even for COWS to work reliably.
 static_assert(kSimulator.MaxPacketSize % 2 == 0);
