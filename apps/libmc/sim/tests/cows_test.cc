@@ -47,9 +47,9 @@ class CowsTest : public ::testing::Test {
 
   virtual void SetUp() {
     // Fill it with a pattern.
-    test_buffer_[2] = 0;
+    test_buffer_[1] = 0;
     uint16_t base = 3;
-    for (int i = 3; i < kBufferSize; ++i) {
+    for (int i = 2; i < kBufferSize; ++i) {
       if (!test_buffer_[i - 1]) {
         test_buffer_[i] = base;
         base *= 5;
