@@ -1,6 +1,8 @@
 import gzip
 import logging
 import os
+import shutil
+import stat
 import subprocess
 import time
 
@@ -13,19 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 def _has_child_process(func):
-    """ Decorator that first checks to make sure that we have a child process
-    before running func.
-    Args:
-      func: The function to decorate. """
-    def wrapper(*args):
-      # Expect the first argument to be the instance.
-      self = args[0]
-      if not self._child_process:
-        raise RuntimeError("Cannot call this with attached process.")
+  """ Decorator that first checks to make sure that we have a child process
+  before running func.
+  Args:
+    func: The function to decorate. """
+  def wrapper(*args):
+    # Expect the first argument to be the instance.
+    self = args[0]
+    if not self._child_process:
+      raise RuntimeError("Cannot call this with attached process.")
 
-      func(*args)
+    func(*args)
 
-    return wrapper
+  return wrapper
 
 
 class CubeVm(object):
@@ -39,9 +41,54 @@ class CubeVm(object):
   _QEMU_CONFIG = "simulator/virtual_cube/assets/cube_vm.cfg"
   # Location of the image for VMs.
   _DISK_IMAGE = "simulator/virtual_cube/assets/cube_os.ext4"
+  # Location of log directory.
+  _CUBE_LOG_DIR = "/tmp/cube_logs"
+  # Location of the cube binaries.
+  _CUBE_BINARY_DIR = "/tmp/cube_binaries"
+  # List of cube binaries.
+  _CUBE_BINARIES = ["apps/libmc/sim/simulator_process",
+                  "apps/libmc/core/system_manager_process"]
+  # Location of starter script.
+  _STARTER_PATH = "simulator/virtual_cube/starter.py"
+  # Location of starter config file.
+  _STARTER_CONFIG_PATH = "simulator/virtual_cube/starter.yaml"
 
   # Internal counter to use for generating unique cube IDs.
   _CUBE_ID = 0
+  # Whether we've already copied the cube binaries to temporary directories.
+  _COPIED_BINARIES = False
+
+  @classmethod
+  def _copy_binaries(cls):
+    """ This is kind of a hack to get around the fact that Bazel's symlinks don't
+    translate correctly into the VM. What it does is looks at all the binary
+    symlinks, and then copies them into a temporary directory that is linked into
+    the VM. """
+    # First, check that the temporary directory exists.
+    bin_dir = cls._CUBE_BINARY_DIR
+    if not os.path.isdir(bin_dir):
+      logger.debug("Creating cube binary directory '%s'." % (bin_dir))
+      os.mkdir(bin_dir)
+
+    # Include the starter script and config file in the things to copy.
+    all_files = cls._CUBE_BINARIES[:]
+    all_files.append(cls._STARTER_PATH)
+    all_files.append(cls._STARTER_CONFIG_PATH)
+
+    # Copy all the executables.
+    for binary in all_files:
+      # Get the full path to the binary, without symlinks.
+      realpath = os.path.realpath(binary)
+
+      # Manually delete any old one in case the permissions are off.
+      bin_name = os.path.basename(realpath)
+      dest_path = os.path.join(cls._CUBE_BINARY_DIR, bin_name)
+      if os.path.exists(dest_path):
+        os.remove(dest_path)
+
+      # Copy it.
+      logger.debug("Copying %s to %s." % (realpath, dest_path))
+      shutil.copy2(realpath, dest_path)
 
   @classmethod
   def select_on(self, cubes):
@@ -70,6 +117,11 @@ class CubeVm(object):
     Args:
       attach_to: When set to a serial handle, it will attach to that
                  currently-running instance instead of creating a new one. """
+    # Copy binaries if that hasn't already been done.
+    if not CubeVm._COPIED_BINARIES:
+      CubeVm._copy_binaries()
+      CubeVm._COPIED_BINARIES = True
+
     # No currently-running process.
     self.__process = None
 
@@ -121,11 +173,29 @@ class CubeVm(object):
         uncompressed_file.write(image_content)
       uncompressed_file.close()
 
+  def __check_temp_files(self):
+    """ Checks that the necessary temporary files are in a valid condition, and
+    fixes them if they aren't. """
+    handle = self.get_serial()
+    if os.path.exists(handle):
+      # If it exists already due to a previous QEMU process not exiting nicely,
+      # it interferes with are startup detection mechanism.
+      logger.debug("Removing old serial handle '%s'." % (handle))
+      os.remove(handle)
+
+    log_dir = self._CUBE_LOG_DIR
+    if not os.path.isdir(log_dir):
+      # The log directory needs to be made.
+      logger.debug("Creating log directory: %s" % (log_dir))
+      os.mkdir(log_dir)
+
   @_has_child_process
   def start(self):
     """ Starts the cube VM running. """
     if self.__process is not None:
       raise RuntimeError("Process is already started.")
+
+    self.__check_temp_files()
 
     command = [self._QEMU_BIN, "-readconfig", self._QEMU_CONFIG, "-nographic"]
     # Add serial options.
@@ -134,8 +204,8 @@ class CubeVm(object):
 
     logger.debug("Running command: %s" % str(command))
 
-    self.__process = subprocess.Popen(command, stdin=subprocess.PIPE,
-                                      stdout=subprocess.PIPE)
+    fnull = file(os.devnull, "w")
+    self.__process = subprocess.Popen(command, stdout=fnull, stdin=fnull)
     logger.info("Started cube VM %d." % (self.__id))
 
     # Wait for the serial interface to exist.

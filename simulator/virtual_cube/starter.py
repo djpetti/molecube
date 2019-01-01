@@ -67,7 +67,8 @@ class Starter(object):
     # We exectute binaries in a chroot to make sure we have the libraries that
     # we need.
     command = ["/usr/sbin/chroot", "/cube_root", binary]
-    process = subprocess.Popen(command, env=my_env)
+    process = subprocess.Popen(command, env=my_env, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, close_fds=True)
     self.__processes.add(process)
 
     logger.debug("Pid: %d" % (process.pid))
@@ -115,6 +116,14 @@ class Starter(object):
 
     return all_running
 
+  def check_output(self):
+    """ Reads and logs output from all processes. """
+    for process in self.__processes:
+      output = process.stdout.read()
+      if output:
+        # Process produced some output.
+        logger.warning("Got output from process %d: %s" % (process.pid, output))
+
 
 def main():
   def exit_handler(*args):
@@ -143,6 +152,7 @@ def main():
   while True:
     # TODO (danielp): Auto-restart of failed processes?
     starter.check_running()
+    starter.check_output()
     time.sleep(1)
 
 if __name__ == "__main__":

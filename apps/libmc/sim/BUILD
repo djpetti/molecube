@@ -18,4 +18,5 @@ cc_binary(
   deps = [":sim",
           "@com_github_gflags_gflags//:gflags",
           "@com_google_glog//:glog"],
+  visibility = ["//simulator:__subpackages__"],
 )

@@ -17,4 +17,5 @@ cc_binary(
           "//apps/libmc/core/events",
           "@tachyon//:tachyon"],
   copts = ["-Iexternal/"],
+  visibility = ["//simulator:__subpackages__"],
 )
