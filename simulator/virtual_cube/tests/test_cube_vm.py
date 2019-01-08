@@ -3,7 +3,13 @@ import os
 import subprocess
 import unittest
 
+from config import config
 from simulator.virtual_cube import cube_vm, serial_com
+
+
+# Load the simulator and cube configurations.
+sim_config = config.simulator_config()
+cube_config = config.cube_config()
 
 
 class TestCubeVm(unittest.TestCase):
@@ -78,10 +84,11 @@ class TestCubeVm(unittest.TestCase):
     cube = cube_vm.CubeVm()
 
     # It should have verified that it didn't already exist.
-    compressed_path = cube_vm.CubeVm._DISK_IMAGE + ".gz"
-    mocked_exists.assert_called_once_with(cube_vm.CubeVm._DISK_IMAGE)
+    disk_image = sim_config.get("qemu", "disk_image")
+    compressed_path = disk_image + ".gz"
+    mocked_exists.assert_called_once_with(disk_image)
     # It should have opened the GZIP file.
-    mocked_open.assert_called_once_with(cube_vm.CubeVm._DISK_IMAGE, "wb")
+    mocked_open.assert_called_once_with(disk_image, "wb")
     mocked_gzip_open.assert_called_once_with(compressed_path, "rb")
     mock_gzip_file.read.assert_called_once_with()
     mock_uncompressed.write.assert_called_once()
@@ -103,18 +110,20 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # Make sure it started the process.
-    expected_command = [cube_vm.CubeVm._QEMU_BIN, "-readconfig",
-                        cube_vm.CubeVm._QEMU_CONFIG, "-nographic", "-chardev",
+    qemu_bin = sim_config.get("qemu", "bin_location")
+    qemu_config = sim_config.get("qemu", "config_location")
+    expected_command = [qemu_bin, "-readconfig",
+                        qemu_config, "-nographic", "-chardev",
                         "socket,path=/tmp/cube0,server,nowait,id=vcube_ser"]
     mocked_popen.assert_called_once_with(expected_command,
-                                         stdin=mock.ANY,
                                          stdout=mock.ANY)
 
     # It should have checked twice for the serial handle.
     expected_calls = [mock.call("/tmp/cube0")] * 2
     mocked_exists.assert_has_calls(expected_calls)
     # It should have checked for the log directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_LOG_DIR)
+    log_dir = cube_config.get("logging", "host_log_dir")
+    mocked_isdir.assert_called_once_with(log_dir)
     # It should have started the serial interface.
     self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
 
@@ -135,18 +144,20 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # Make sure it started the process.
-    expected_command = [cube_vm.CubeVm._QEMU_BIN, "-readconfig",
-                        cube_vm.CubeVm._QEMU_CONFIG, "-nographic", "-chardev",
+    qemu_bin = sim_config.get("qemu", "bin_location")
+    qemu_config = sim_config.get("qemu", "config_location")
+    expected_command = [qemu_bin, "-readconfig",
+                        qemu_config, "-nographic", "-chardev",
                         "socket,path=/tmp/cube0,server,nowait,id=vcube_ser"]
     mocked_popen.assert_called_once_with(expected_command,
-                                         stdin=mock.ANY,
                                          stdout=mock.ANY)
 
     # It should have checked for the serial handle twice.
     calls = [mock.call("/tmp/cube0")] * 3
     mocked_exists.assert_has_calls(calls)
     # It should have checked for the log directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_LOG_DIR)
+    log_dir = cube_config.get("logging", "host_log_dir")
+    mocked_isdir.assert_called_once_with(log_dir)
     # It should have started the serial interface.
     self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
 
@@ -215,9 +226,10 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # It should have checked for the log directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_LOG_DIR)
+    log_dir = cube_config.get("logging", "host_log_dir")
+    mocked_isdir.assert_called_once_with(log_dir)
     # It should have created it.
-    mocked_mkdir.assert_called_once_with(cube_vm.CubeVm._CUBE_LOG_DIR)
+    mocked_mkdir.assert_called_once_with(log_dir)
 
   @mock.patch("subprocess.Popen")
   @mock.patch("simulator.virtual_cube.serial_com.SerialCom")
@@ -236,7 +248,8 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # It should have checked for the log directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_LOG_DIR)
+    log_dir = cube_config.get("logging", "host_log_dir")
+    mocked_isdir.assert_called_once_with(log_dir)
     # It should not have created it.
     mocked_mkdir.assert_not_called()
 
@@ -274,15 +287,22 @@ class TestCubeVm(unittest.TestCase):
   @mock.patch("os.remove")
   @mock.patch("shutil.copy2")
   @mock.patch("os.mkdir")
-  def test_copy_binaries(self, mocked_mkdir, mocked_copy2, mocked_remove,
-                         mocked_exists, mocked_realpath, mocked_isdir):
+  @mock.patch("shutil.copytree")
+  @mock.patch("shutil.rmtree")
+  def test_copy_binaries(self, mocked_rmtree, mocked_copytree, mocked_mkdir,
+                         mocked_copy2, mocked_remove, mocked_exists,
+                         mocked_realpath, mocked_isdir):
     """ Tests that _copy_binaries works under normal conditions. """
-    all_files = cube_vm.CubeVm._CUBE_BINARIES[:]
-    all_files.append(cube_vm.CubeVm._STARTER_PATH)
-    all_files.append(cube_vm.CubeVm._STARTER_CONFIG_PATH)
+    cube_binaries = cube_config.get("binaries", "start_list")
+    starter_path = cube_config.get("binaries", "starter_script")
+    config_path = cube_config.get("binaries", "config_package")
+    all_files = cube_binaries
+    all_files.append(starter_path)
+    all_files.append(config_path)
 
-    # Make it look like the binary directory exists.
-    mocked_isdir.return_value = True
+    # Make it look like the binary directory exists, but that the things it
+    # needs to copy are not directories.
+    mocked_isdir.side_effect = [True] + [False] * len(all_files)
     # For the sake of simplicity, we're just going to use the symlink paths as
     # the full paths.
     mocked_realpath.side_effect = all_files
@@ -291,8 +311,12 @@ class TestCubeVm(unittest.TestCase):
 
     cube_vm.CubeVm._copy_binaries()
 
-    # Make sure it checked for the binary directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_BINARY_DIR)
+    # Make sure it checked for the binary directory, and whether the targets are
+    # directories.
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
+    expected_calls = [mock.call(bin_dir)] + \
+                     [mock.call(path) for path in all_files]
+    mocked_isdir.assert_has_calls(expected_calls)
     # It should not have tried to create it.
     mocked_mkdir.assert_not_called()
 
@@ -317,7 +341,13 @@ class TestCubeVm(unittest.TestCase):
       # The tail component should be name of the binary.
       self.assertEqual(os.path.basename(expected_path), tail)
       # The head component should be the binary directory.
-      self.assertEqual(cube_vm.CubeVm._CUBE_BINARY_DIR, head)
+      self.assertEqual(bin_dir, head)
+
+    # It should not have removed anything.
+    mocked_remove.assert_not_called()
+    mocked_rmtree.assert_not_called()
+    # It should not have tried to copy directories.
+    mocked_copytree.assert_not_called()
 
   @mock.patch("os.path.isdir")
   @mock.patch("os.path.realpath")
@@ -325,17 +355,24 @@ class TestCubeVm(unittest.TestCase):
   @mock.patch("os.remove")
   @mock.patch("shutil.copy2")
   @mock.patch("os.mkdir")
-  def test_copy_binaries_no_bin_dir(self, mocked_mkdir, mocked_copy2,
-                                    mocked_remove, mocked_exists,
-                                    mocked_realpath, mocked_isdir):
-    """ Tests that _copy_binaries works when the target directory does not
-    exist. """
-    all_files = cube_vm.CubeVm._CUBE_BINARIES[:]
-    all_files.append(cube_vm.CubeVm._STARTER_PATH)
-    all_files.append(cube_vm.CubeVm._STARTER_CONFIG_PATH)
+  @mock.patch("shutil.copytree")
+  @mock.patch("shutil.rmtree")
+  def test_copy_binaries_with_directories(self, mocked_rmtree, mocked_copytree,
+                                          mocked_mkdir, mocked_copy2,
+                                          mocked_remove, mocked_exists,
+                                          mocked_realpath, mocked_isdir):
+    """ Tests that _copy_binaries works when we have to copy directories too.
+    """
+    cube_binaries = cube_config.get("binaries", "start_list")
+    starter_path = cube_config.get("binaries", "starter_script")
+    config_path = cube_config.get("binaries", "config_package")
+    all_files = cube_binaries
+    all_files.append(starter_path)
+    all_files.append(config_path)
 
-    # Make it look like the binary directory doesn't exist.
-    mocked_isdir.return_value = False
+    # Make it look like the binary directory exists, and that the things it
+    # needs to copy are directories.
+    mocked_isdir.side_effect = [True] + [True] * len(all_files)
     # For the sake of simplicity, we're just going to use the symlink paths as
     # the full paths.
     mocked_realpath.side_effect = all_files
@@ -344,15 +381,43 @@ class TestCubeVm(unittest.TestCase):
 
     cube_vm.CubeVm._copy_binaries()
 
-    # Make sure it checked for the binary directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_BINARY_DIR)
-    # Make sure it created it.
-    mocked_mkdir.assert_called_once_with(cube_vm.CubeVm._CUBE_BINARY_DIR)
+    # Make sure it checked for the binary directory, and whether the targets are
+    # directories.
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
+    expected_calls = [mock.call(bin_dir)] + \
+                     [mock.call(path) for path in all_files]
+    mocked_isdir.assert_has_calls(expected_calls)
+    # It should not have tried to create it.
+    mocked_mkdir.assert_not_called()
 
-    # Make sure that all the per-binary calls were made.
-    self.assertEqual(len(all_files), mocked_realpath.call_count)
+    # Make sure it got the un-symlinked path for all the executables.
+    expected_calls = [mock.call(path) for path in all_files]
+    mocked_realpath.assert_has_calls(expected_calls)
+
+    # It should have checked for existing copies, and performed the copy
+    # operation.
     self.assertEqual(len(all_files), mocked_exists.call_count)
-    self.assertEqual(len(all_files), mocked_copy2.call_count)
+    dest_calls = mocked_exists.call_args_list
+    # The first index gets the args tuple, the second gets the first argument.
+    dest_paths = [call[0][0] for call in dest_calls]
+    copy_calls = [mock.call(src[1][0], dst) for src, dst in \
+                  zip(expected_calls, dest_paths)]
+    mocked_copytree.assert_has_calls(copy_calls)
+
+    # Check that the destination paths are reasonable.
+    for expected_path, actual_path in zip(all_files, dest_paths):
+      head, tail = os.path.split(actual_path)
+
+      # The tail component should be name of the binary.
+      self.assertEqual(os.path.basename(expected_path), tail)
+      # The head component should be the binary directory.
+      self.assertEqual(bin_dir, head)
+
+    # It should not have removed anything.
+    mocked_remove.assert_not_called()
+    mocked_rmtree.assert_not_called()
+    # It should not have tried to copy single files.
+    mocked_copy2.assert_not_called()
 
   @mock.patch("os.path.isdir")
   @mock.patch("os.path.realpath")
@@ -360,17 +425,76 @@ class TestCubeVm(unittest.TestCase):
   @mock.patch("os.remove")
   @mock.patch("shutil.copy2")
   @mock.patch("os.mkdir")
-  def test_copy_binaries_old_copy(self, mocked_mkdir, mocked_copy2,
-                                  mocked_remove, mocked_exists,
-                                  mocked_realpath, mocked_isdir):
+  @mock.patch("shutil.copytree")
+  @mock.patch("shutil.rmtree")
+  def test_copy_binaries_no_bin_dir(self, mocked_rmtree, mocked_copytree,
+                                    mocked_mkdir, mocked_copy2, mocked_remove,
+                                    mocked_exists, mocked_realpath,
+                                    mocked_isdir):
+    """ Tests that _copy_binaries works when the target directory does not
+    exist. """
+    cube_binaries = cube_config.get("binaries", "start_list")
+    starter_path = cube_config.get("binaries", "starter_script")
+    config_path = cube_config.get("binaries", "config_package")
+    all_files = cube_binaries
+    all_files.append(starter_path)
+    all_files.append(config_path)
+
+    # Make it look like the binary directory doesn't exist, and the things it
+    # needs to copy are not directories.
+    mocked_isdir.side_effect = [False] + [False] * len(all_files)
+    # For the sake of simplicity, we're just going to use the symlink paths as
+    # the full paths.
+    mocked_realpath.side_effect = all_files
+    # Make it look like there are no old binaries.
+    mocked_exists.return_value = False
+
+    cube_vm.CubeVm._copy_binaries()
+
+    # Make sure it checked for the binary directory, and whether the targets are
+    # directories.
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
+    expected_calls = [mock.call(bin_dir)] + \
+                     [mock.call(path) for path in all_files]
+    mocked_isdir.assert_has_calls(expected_calls)
+    # Make sure it created it.
+    mocked_mkdir.assert_called_once_with(bin_dir)
+
+    # Make sure that all the per-binary calls were made.
+    self.assertEqual(len(all_files), mocked_realpath.call_count)
+    self.assertEqual(len(all_files), mocked_exists.call_count)
+    self.assertEqual(len(all_files), mocked_copy2.call_count)
+
+    # It should not have removed anything.
+    mocked_remove.assert_not_called()
+    mocked_rmtree.assert_not_called()
+    # It should not have tried to copy directories.
+    mocked_copytree.assert_not_called()
+
+  @mock.patch("os.path.isdir")
+  @mock.patch("os.path.realpath")
+  @mock.patch("os.path.exists")
+  @mock.patch("os.remove")
+  @mock.patch("shutil.copy2")
+  @mock.patch("os.mkdir")
+  @mock.patch("shutil.copytree")
+  @mock.patch("shutil.rmtree")
+  def test_copy_binaries_old_copy(self, mocked_rmtree, mocked_copytree,
+                                  mocked_mkdir, mocked_copy2, mocked_remove,
+                                  mocked_exists, mocked_realpath, mocked_isdir):
     """ Tests that _copy_binaries works when there are old copies of the
     binaries. """
-    all_files = cube_vm.CubeVm._CUBE_BINARIES[:]
-    all_files.append(cube_vm.CubeVm._STARTER_PATH)
-    all_files.append(cube_vm.CubeVm._STARTER_CONFIG_PATH)
+    cube_binaries = cube_config.get("binaries", "start_list")
+    starter_path = cube_config.get("binaries", "starter_script")
+    config_path = cube_config.get("binaries", "config_package")
+    all_files = cube_binaries
+    all_files.append(starter_path)
+    all_files.append(config_path)
 
-    # Make it look like the binary directory exists.
-    mocked_isdir.return_value = True
+    # Make it look like the binary directory exists, but that the things it
+    # needs to copy are not directories. Also, make it look like the existing
+    # items in the binary directory are not directories.
+    mocked_isdir.side_effect = [True] + [False] * len(all_files) * 2
     # For the sake of simplicity, we're just going to use the symlink paths as
     # the full paths.
     mocked_realpath.side_effect = all_files
@@ -379,8 +503,23 @@ class TestCubeVm(unittest.TestCase):
 
     cube_vm.CubeVm._copy_binaries()
 
-    # Make sure it checked for the binary directory.
-    mocked_isdir.assert_called_once_with(cube_vm.CubeVm._CUBE_BINARY_DIR)
+    # Compute expected destination paths.
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
+    dest_paths = []
+    for path in all_files:
+      dest_path = os.path.join(bin_dir, os.path.basename(path))
+      dest_paths.append(dest_path)
+
+    # Make sure it checked for the binary directory, and whether the targets are
+    # directories.
+    # Initial check for the binary directory.
+    expected_calls = [mock.call(bin_dir)]
+    for src_path, dst_path in zip(all_files, dest_paths):
+      # It will test the existing old binary first.
+      expected_calls.append(mock.call(dst_path))
+      # Then it will test the source binary.
+      expected_calls.append(mock.call(src_path))
+    mocked_isdir.assert_has_calls(expected_calls)
     # It should not have tried to create it.
     mocked_mkdir.assert_not_called()
 
@@ -389,16 +528,81 @@ class TestCubeVm(unittest.TestCase):
     self.assertEqual(len(all_files), mocked_exists.call_count)
     self.assertEqual(len(all_files), mocked_copy2.call_count)
 
-    # Compute expected destination paths.
-    dest_paths = []
-    for path in all_files:
-      dest_path = os.path.join(cube_vm.CubeVm._CUBE_BINARY_DIR,
-                               os.path.basename(path))
-      dest_paths.append(dest_path)
-
     # Check that it removed the old binaries.
     expected_calls = [mock.call(path) for path in dest_paths]
     mocked_remove.assert_has_calls(expected_calls)
+
+    # It should not have removed directories.
+    mocked_rmtree.assert_not_called()
+    # It should not have tried to copy directories.
+    mocked_copytree.assert_not_called()
+
+  @mock.patch("os.path.isdir")
+  @mock.patch("os.path.realpath")
+  @mock.patch("os.path.exists")
+  @mock.patch("os.remove")
+  @mock.patch("shutil.copy2")
+  @mock.patch("os.mkdir")
+  @mock.patch("shutil.copytree")
+  @mock.patch("shutil.rmtree")
+  def test_copy_binaries_old_copy_dir(self, mocked_rmtree, mocked_copytree,
+                                      mocked_mkdir, mocked_copy2, mocked_remove,
+                                      mocked_exists, mocked_realpath,
+                                      mocked_isdir):
+    """ Tests that _copy_binaries works when there are old copies of the
+    binaries, including old directories. """
+    cube_binaries = cube_config.get("binaries", "start_list")
+    starter_path = cube_config.get("binaries", "starter_script")
+    config_path = cube_config.get("binaries", "config_package")
+    all_files = cube_binaries
+    all_files.append(starter_path)
+    all_files.append(config_path)
+
+    # Make it look like the binary directory exists, but that the things it
+    # needs to copy are not directories. Also, make it look like the existing
+    # items in the binary directory are directories.
+    mocked_isdir.side_effect = [True] + [True, False] * len(all_files)
+    # For the sake of simplicity, we're just going to use the symlink paths as
+    # the full paths.
+    mocked_realpath.side_effect = all_files
+    # Make it look like there are old binaries.
+    mocked_exists.return_value = True
+
+    cube_vm.CubeVm._copy_binaries()
+
+    # Compute expected destination paths.
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
+    dest_paths = []
+    for path in all_files:
+      dest_path = os.path.join(bin_dir, os.path.basename(path))
+      dest_paths.append(dest_path)
+
+    # Make sure it checked for the binary directory, and whether the targets are
+    # directories.
+    # Initial check for the binary directory.
+    expected_calls = [mock.call(bin_dir)]
+    for src_path, dst_path in zip(all_files, dest_paths):
+      # It will test the existing old binary first.
+      expected_calls.append(mock.call(dst_path))
+      # Then it will test the source binary.
+      expected_calls.append(mock.call(src_path))
+    mocked_isdir.assert_has_calls(expected_calls)
+    # It should not have tried to create it.
+    mocked_mkdir.assert_not_called()
+
+    # Make sure that all the per-binary calls were made.
+    self.assertEqual(len(all_files), mocked_realpath.call_count)
+    self.assertEqual(len(all_files), mocked_exists.call_count)
+    self.assertEqual(len(all_files), mocked_copy2.call_count)
+
+    # Check that it removed the old binaries.
+    expected_calls = [mock.call(path) for path in dest_paths]
+    mocked_rmtree.assert_has_calls(expected_calls)
+
+    # It should not have removed single files.
+    mocked_remove.assert_not_called()
+    # It should not have tried to copy directories.
+    mocked_copytree.assert_not_called()
 
   @mock.patch("simulator.virtual_cube.serial_com.SerialCom.select_on")
   @mock.patch("simulator.virtual_cube.serial_com.SerialCom")

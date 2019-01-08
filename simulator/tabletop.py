@@ -1,8 +1,8 @@
 import logging
 
+from config import config
 from cube import Cube
 from obj_canvas import Line
-import config
 import cube_event_handler
 import display
 import event
@@ -10,6 +10,9 @@ import obj_canvas
 
 
 logger = logging.getLogger(__name__)
+
+# Load the simulator config.
+sim_config = config.simulator_config()
 
 
 class Tabletop(object):
@@ -19,15 +22,18 @@ class Tabletop(object):
     logger.info("Creating new tabletop")
 
     # List of cubes.
-    self.__cubes = [[None for x in range(int(config.get('CUBE', 'GRID_WIDTH')))]
-                     for y in range(int(config.get('CUBE', 'GRID_HEIGHT')))]
+    grid_width = sim_config.get("appearance", "grid_width")
+    grid_height = sim_config.get("appearance", "grid_height")
+    self.__cubes = [[None for x in range(grid_width)]
+                     for y in range(grid_height)]
 
     # List of lines making up the grid
     self.__grid = []
     self.__drawngrid = False
 
     # Canvas on which to draw cubes.
-    self.__canvas = obj_canvas.Canvas(background=config.get('COLORS', 'BACKGROUND'))
+    background_color = sim_config.get("appearance", "colors", "background")
+    self.__canvas = obj_canvas.Canvas(background=background_color)
     self.__cube_event_handler = \
         cube_event_handler.CubeEventHandler(self.__canvas)
 
@@ -46,9 +52,11 @@ class Tabletop(object):
       return
 
     # Places the cube
-    selected_cube.snap_to_grid(int(config.get('CUBE', 'CUBE_SIZE')),
+    cube_size = sim_config.get("appearance", "cube_size")
+    cube_offset = sim_config.get("appearance", "cube_offset")
+    selected_cube.snap_to_grid(cube_size,
                                self.__cubes,
-                               offset=int(config.get('CUBE', 'GRID_OFFSET')))
+                               offset=cube_offset)
     selected_cube.clear_drag()
 
     # Clear the grid
@@ -79,7 +87,7 @@ class Tabletop(object):
       # Handle all events.
       self.__cube_event_handler.handle_events(self.__cubes)
 
-  def make_cube(self, color=config.get('COLORS', 'CUBE_RED')):
+  def make_cube(self, color=sim_config.get("appearance", "colors", "cube_red")):
     """ Adds a new cube to the canvas.
     Args:
       color: The color of the cube.
@@ -116,7 +124,7 @@ class Tabletop(object):
 
   def run(self):
     """ Runs the tabletop simulation indefinitely. """
-    # Kick of cube event listener thread.
+    # Kick off cube event listener thread.
     self.__canvas.after(0, self.__wait_for_cube_events)
 
     self.__canvas.wait_for_events()
@@ -128,15 +136,18 @@ class Tabletop(object):
     grid = []
     window_x, window_y = self.__canvas.get_window_size()
     i = 0
+
+    grid_color = sim_config.get("appearance", "colors", "grid")
+    cube_size = sim_config.get("appearance", "cube_size")
     while i < window_x:
-      line = Line(self.__canvas, (i, 0), (i, window_y), fill=config.get('COLORS', 'GRID'))
+      line = Line(self.__canvas, (i, 0), (i, window_y), fill=grid_color)
       grid.append(line)
-      i += int(config.get('CUBE', 'CUBE_SIZE'))
+      i += cube_size
     j = 0
     while j < window_y:
-      line = Line(self.__canvas, (0, j), (window_x, j), fill=config.get('COLORS', 'GRID'))
+      line = Line(self.__canvas, (0, j), (window_x, j), fill=grid_color)
       grid.append(line)
-      j += int(config.get('CUBE', 'CUBE_SIZE'))
+      j += cube_size
     return grid
 
   def clear_grid(self):

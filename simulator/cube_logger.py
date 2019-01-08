@@ -1,5 +1,10 @@
 import logging
-import config
+
+from config import config
+
+
+# Config class for the simulator.
+sim_config = config.simulator_config()
 
 
 class CubeLogger(logging.Logger):
@@ -14,7 +19,7 @@ class CubeLogger(logging.Logger):
     # Set the root logging level.
     self.setLevel(logging.DEBUG)
 
-    log_location = config.get('LOGGING', 'log_location')
+    log_location = config.get('logging', 'log_file')
 
     # Create the Handler for logging data to a file
     file_handler = logging.FileHandler(log_location, mode="w")

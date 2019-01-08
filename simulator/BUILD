@@ -2,7 +2,8 @@ py_library(
   name = "simulator",
   srcs = glob(["*.py"], exclude=["demo_game.py"]),
   data = ["config.ini"],
-  deps = ["//simulator/virtual_cube"],
+  deps = ["//simulator/virtual_cube",
+          "//config"],
   visibility = ["//simulator:__subpackages__"],
 )
 

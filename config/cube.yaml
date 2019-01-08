@@ -1,0 +1,27 @@
+# Config file for cubes.
+
+binaries:
+  # Root directory in which the binaries will be located. (Cube side.)
+  vm_bin_dir: "/cube_bin"
+  # Directory to which the binaries will be copied. (Host side.)
+  host_bin_dir: "/tmp/cube_binaries"
+
+  # List of binaries to run on the cube.
+  start_list:
+    - "apps/libmc/sim/simulator_process"
+    - "apps/libmc/core/system_manager_process"
+
+  # Location of the starter script.
+  starter_script: "simulator/virtual_cube/starter.py"
+  # Path to the config package. (Which is the package this file is in.)
+  config_package: "config/"
+
+logging:
+  # Directory to which we should write output logs for the processes that we
+  # start. (Cube side.)
+  vm_log_dir: "/logs"
+  # Log directory location on the host system.
+  host_log_dir: "/tmp/cube_logs"
+
+# Location of the SHM file.
+shm_file: "/dev/shm/tachyon_core"

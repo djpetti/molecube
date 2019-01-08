@@ -1,8 +1,8 @@
-import config
 import logging
 
 from virtual_cube import cube_vm
 
+from config import config
 import display
 import event
 import logging
@@ -10,6 +10,9 @@ import obj_canvas
 
 
 logger = logging.getLogger(__name__)
+
+# Get the configuration for the simulator.
+sim_config = config.simulator_config()
 
 
 class Cube(object):
@@ -105,10 +108,12 @@ class Cube(object):
 
     # Determine position from index
     (x, y) = self.__idx
-    x *= int(config.get('CUBE', 'CUBE_SIZE'))
-    y *= int(config.get('CUBE', 'CUBE_SIZE'))
-    x += int(config.get('CUBE', 'GRID_OFFSET'))
-    y += int(config.get('CUBE', 'GRID_OFFSET'))
+    cube_size = sim_config.get("appearance", "cube_size")
+    cube_offset = sim_config.get("appearance", "cube_offset")
+    x *= cube_size
+    y *= cube_size
+    x += cube_offset
+    y += cube_offset
     self.__pos = (x, y)
 
     self.__color = color
@@ -151,20 +156,21 @@ class Cube(object):
     x, y = self.__pos
 
     # Draw the actual cube shapes.
-    base_size = int(config.get('CUBE', 'CUBE_SIZE'))
+    base_size = sim_config.get("appearance", "cube_size")
+    button_color = sim_config.get("appearance", "colors", "buttons")
     case = obj_canvas.Rectangle(self.__canvas, self.__pos,
                                 (base_size, base_size),
                                 fill=self.__color, outline=self.__color)
     self.__screen = display.Display(self.__canvas, (x, y - 20), (180, 140))
     button_l = obj_canvas.Rectangle(self.__canvas, (x - 65, y + 75), (50, 30),
-                                    fill=config.get('COLORS', 'BUTTONS'),
-                                    outline=config.get('COLORS', 'BUTTONS'))
+                                    fill=button_color,
+                                    outline=button_color)
     button_c = obj_canvas.Rectangle(self.__canvas, (x, y + 75), (50, 30),
-                                    fill=config.get('COLORS', 'BUTTONS'),
-                                    outline=config.get('COLORS', 'BUTTONS'))
+                                    fill=button_color,
+                                    outline=button_color)
     button_r = obj_canvas.Rectangle(self.__canvas, (x + 65, y + 75), (50, 30),
-                                    fill=config.get('COLORS', 'BUTTONS'),
-                                    outline=config.get('COLORS', 'BUTTONS'))
+                                    fill=button_color,
+                                    outline=button_color)
 
     self.__cube_shapes.extend([case, self.__screen, button_l, button_c, button_r])
 
@@ -221,6 +227,26 @@ class Cube(object):
       # Report a state change.
       self.__config_changed_hook()
 
+  def __set_pos(self, x, y):
+    """ Sets the pixel position of the cube.
+    Args:
+      x: The new x position.
+      y: The new y position. """
+    # Figure out the offset from the old position.
+    old_x, old_y = self.get_pos()
+    move_x = x - old_x
+    move_y = y - old_y
+    self.__pos = (x, y)
+
+    for shape in self.__cube_shapes:
+      shape.move(move_x, move_y)
+
+    # Update the canvas.
+    self.__canvas.update()
+
+    message = "cube changed position from " + str((old_x, old_y)) + " to " + str((x, y))
+    logger.info(message)
+
   def get_connections(self):
     """
     Returns:
@@ -258,32 +284,15 @@ class Cube(object):
       x: The new x position.
       y: The new y position. """
     self.__idx = (x, y)
-    x *= int(config.get('CUBE', 'CUBE_SIZE'))
-    y *= int(config.get('CUBE', 'CUBE_SIZE'))
-    x += int(config.get('CUBE', 'GRID_OFFSET'))
-    y += int(config.get('CUBE', 'GRID_OFFSET'))
-    self._set_pos(x, y)
+    cube_size = sim_config.get("appearance", "cube_size")
+    cube_offset = sim_config.get("appearance", "cube_offset")
+    x *= cube_size
+    y *= cube_size
+    x += cube_offset
+    y += cube_offset
+
+    self.__set_pos(x, y)
     self.update_connections(others)
-
-  def _set_pos(self, x, y):
-    """ Sets the pixel position of the cube.
-    Args:
-      x: The new x position.
-      y: The new y position. """
-    # Figure out the offset from the old position.
-    old_x, old_y = self.get_pos()
-    move_x = x - old_x
-    move_y = y - old_y
-    self.__pos = (x, y)
-
-    for shape in self.__cube_shapes:
-      shape.move(move_x, move_y)
-
-    # Update the canvas.
-    self.__canvas.update()
-
-    message = "cube changed position from " + str((old_x, old_y)) + " to " + str((x, y))
-    logger.info(message)
 
   def get_color(self):
     return self.__color
@@ -362,8 +371,8 @@ class Cube(object):
     # makes sure no cube is in the way, moves the cube if so
     (x1, y1) = self.__idx
 
-    offset = int(config.get("CUBE", "GRID_OFFSET"))
-    size = int(config.get("CUBE", "CUBE_SIZE"))
+    size = sim_config.get("appearance", "cube_size")
+    offset = sim_config.get("appearance", "cube_offset")
 
     x2 = (new_x - offset) // size
     y2 = (new_y - offset) // size

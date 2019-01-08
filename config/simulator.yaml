@@ -1,0 +1,43 @@
+# Config file for the simulator.
+
+qemu:
+  # Location of the QEMU binary.
+  bin_location: "/usr/bin/qemu-system-arm"
+  # Location of the QEMU configuration file for the cube VMs.
+  config_location: "simulator/virtual_cube/assets/cube_vm.cfg"
+
+  # Location of the disk image for cube VMs.
+  disk_image: "simulator/virtual_cube/assets/cube_os.ext4"
+
+logging:
+  # Location of the simulator log file.
+  log_file: "simulator.log"
+
+appearance:
+  # Base cube size in pixels.
+  cube_size: 200
+  # Offset to use for aligning to the grid.
+  cube_offset: 100
+
+  # Number of horizontal grid spaces.
+  grid_width: 8
+  # Number of vertical grid spaces.
+  grid_height: 4
+
+  colors:
+    # Color of red cube.
+    cube_red: "#DB4D67"
+    # Color of blue cube.
+    cube_blue: "#146687"
+    # Color of gold cube.
+    cube_gold: "#87821B"
+
+    # Default screen color.
+    screen: "#35A6D4"
+    # Button color.
+    buttons: "#051B24"
+
+    # Grid line color.
+    grid: "#EEEEEE"
+    # Background color
+    background: "#595959"

@@ -5,12 +5,7 @@ import subprocess
 import sys
 import time
 
-import yaml
-try:
-  # Import accelerated versions if we have them.
-  from yaml import CLoader as Loader
-except ImportError:
-  from yaml import Loader
+from config import config
 
 
 # Configure logging.
@@ -19,15 +14,15 @@ logging.basicConfig(filename="/cube_logs/starter.log",
                     level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Load the cube configuration.
+cube_config = config.cube_config()
+
 
 class Starter(object):
   """ Responsible for starting all code running on the virtual cube. """
 
-  def __init__(self, config):
-    """
-    Args:
-      config: The configuration file to use. """
-    self.__load_config(config)
+  def __init__(self):
+    self.__load_config()
 
     # Set of running processes.
     self.__processes = set([])
@@ -37,22 +32,25 @@ class Starter(object):
       logger.info("Deleting existing SHM: %s" % (self.__shm_file))
       os.remove(self.__shm_file)
 
-  def __load_config(self, config):
-    """ Loads the configuration from a file.
-    Args:
-      config: The file to load from. """
-    logger.info("Reading configuration from file: %s" % (config))
-
-    config_file = file(config)
-    config_data = yaml.load(config_file, Loader=Loader)
-
+  def __load_config(self):
+    """ Loads the configuration from a file. """
     # List of binaries to run.
-    self.__binaries = config_data["binaries"]
+    abs_binaries = cube_config.get("binaries", "start_list")
+
+    # Convert the binary paths so they point to the copied versions in the cube
+    # binary directory.
+    self.__binaries = []
+    bin_dir = cube_config.get("binaries", "vm_bin_dir")
+    for binary in abs_binaries:
+      bin_name = os.path.basename(binary)
+      copied_path = os.path.join(bin_dir, bin_name)
+      self.__binaries.append(copied_path)
+
     # Log directory for processes.
-    self.__log_dir = config_data["log_dir"]
+    self.__log_dir = cube_config.get("logging", "vm_log_dir")
     logger.debug("Writing process logs to '%s'." % (self.__log_dir))
 
-    self.__shm_file = config_data["shm_file"]
+    self.__shm_file = cube_config.get("shm_file")
 
   def __start_binary(self, binary):
     """ Starts a particular binary.
@@ -135,13 +133,8 @@ def main():
 
     sys.exit(0)
 
-  # Note: We don't use argparse here because OpenWRT doesn't really support it.
-  if len(sys.argv) != 2:
-    print "Usage: starter.py starter_config"
-    sys.exit(1)
-
   # Start everything.
-  starter = Starter(sys.argv[1])
+  starter = Starter()
   starter.start_all()
 
   # Register the exit handler.

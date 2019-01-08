@@ -2,11 +2,13 @@ FROM ubuntu:18.04
 
 # Install packaged dependencies.
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
     apt-get install -y git python build-essential pkg-config zip zlib1g-dev \
-                       unzip qemu-system-arm wget python-pip g++-multilib
+                       unzip qemu-system-arm wget python-pip g++-multilib \
+                       python-tk
 
 # Install python dependencies.
-RUN pip install mock pyserial
+RUN pip install mock pyserial pyyaml
 
 # Install Bazel.
 RUN wget -O bazel_install.sh \

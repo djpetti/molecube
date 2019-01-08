@@ -1,5 +1,9 @@
-import config
+from config import config
 import obj_canvas
+
+
+# Load the simulator config.
+sim_config = config.simulator_config()
 
 
 class Display(obj_canvas.Shape):
@@ -21,9 +25,10 @@ class Display(obj_canvas.Shape):
     self.__display_objs = []
 
     # Draw on the canvas.
+    screen_color = sim_config.get("appearance", "colors", "screen")
     super(Display, self).__init__(canvas, pos,
-                                  fill=config.get('COLORS', 'SCREEN'),
-                                  outline=config.get('COLORS', 'SCREEN'))
+                                  fill=screen_color,
+                                  outline=screen_color)
 
   def _draw_object(self):
     # Draw the background.

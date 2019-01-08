@@ -8,10 +8,15 @@ import time
 
 from apps.libmc.sim.protobuf import sim_message_pb2
 
+from config import config
 import serial_com
 
 
 logger = logging.getLogger(__name__)
+
+# Load the simulator and cube configs.
+sim_config = config.simulator_config()
+cube_config = config.cube_config()
 
 
 def _has_child_process(func):
@@ -34,25 +39,6 @@ class CubeVm(object):
   """ This is a wrapper around the QEMU instance. It generally handles stopping,
   starting, and managing the QEMU VM. """
 
-  # TODO (danielp): Put these into a config file eventually.
-  # Location of the QEMU binary to use.
-  _QEMU_BIN = "/usr/bin/qemu-system-arm"
-  # Location of the QEMU configuration file for cubes.
-  _QEMU_CONFIG = "simulator/virtual_cube/assets/cube_vm.cfg"
-  # Location of the image for VMs.
-  _DISK_IMAGE = "simulator/virtual_cube/assets/cube_os.ext4"
-  # Location of log directory.
-  _CUBE_LOG_DIR = "/tmp/cube_logs"
-  # Location of the cube binaries.
-  _CUBE_BINARY_DIR = "/tmp/cube_binaries"
-  # List of cube binaries.
-  _CUBE_BINARIES = ["apps/libmc/sim/simulator_process",
-                  "apps/libmc/core/system_manager_process"]
-  # Location of starter script.
-  _STARTER_PATH = "simulator/virtual_cube/starter.py"
-  # Location of starter config file.
-  _STARTER_CONFIG_PATH = "simulator/virtual_cube/starter.yaml"
-
   # Internal counter to use for generating unique cube IDs.
   _CUBE_ID = 0
   # Whether we've already copied the cube binaries to temporary directories.
@@ -65,15 +51,15 @@ class CubeVm(object):
     symlinks, and then copies them into a temporary directory that is linked into
     the VM. """
     # First, check that the temporary directory exists.
-    bin_dir = cls._CUBE_BINARY_DIR
+    bin_dir = cube_config.get("binaries", "host_bin_dir")
     if not os.path.isdir(bin_dir):
       logger.debug("Creating cube binary directory '%s'." % (bin_dir))
       os.mkdir(bin_dir)
 
     # Include the starter script and config file in the things to copy.
-    all_files = cls._CUBE_BINARIES[:]
-    all_files.append(cls._STARTER_PATH)
-    all_files.append(cls._STARTER_CONFIG_PATH)
+    all_files = cube_config.get("binaries", "start_list")
+    all_files.append(cube_config.get("binaries", "starter_script"))
+    all_files.append(cube_config.get("binaries", "config_package"))
 
     # Copy all the executables.
     for binary in all_files:
@@ -82,13 +68,19 @@ class CubeVm(object):
 
       # Manually delete any old one in case the permissions are off.
       bin_name = os.path.basename(realpath)
-      dest_path = os.path.join(cls._CUBE_BINARY_DIR, bin_name)
+      dest_path = os.path.join(bin_dir, bin_name)
       if os.path.exists(dest_path):
-        os.remove(dest_path)
+        if os.path.isdir(dest_path):
+          shutil.rmtree(dest_path)
+        else:
+          os.remove(dest_path)
 
       # Copy it.
       logger.debug("Copying %s to %s." % (realpath, dest_path))
-      shutil.copy2(realpath, dest_path)
+      if os.path.isdir(realpath):
+        shutil.copytree(realpath, dest_path)
+      else:
+        shutil.copy2(realpath, dest_path)
 
   @classmethod
   def select_on(self, cubes):
@@ -159,14 +151,15 @@ class CubeVm(object):
   def __extract_disk_image(self):
     """ Extracts the VM disk image if necessary. """
     # The compressed path is just the normal one with a gzip extension.
-    compressed_path = CubeVm._DISK_IMAGE + ".gz"
+    disk_image = sim_config.get("qemu", "disk_image")
+    compressed_path = disk_image + ".gz"
 
-    if not os.path.exists(CubeVm._DISK_IMAGE):
+    if not os.path.exists(disk_image):
       # We need to extract the compressed version.
       logger.info("Extracting disk image...")
 
       # Create uncompressed file.
-      uncompressed_file = open(CubeVm._DISK_IMAGE, "wb")
+      uncompressed_file = open(disk_image, "wb")
 
       with gzip.open(compressed_path, "rb") as compressed:
         image_content = compressed.read()
@@ -183,7 +176,7 @@ class CubeVm(object):
       logger.debug("Removing old serial handle '%s'." % (handle))
       os.remove(handle)
 
-    log_dir = self._CUBE_LOG_DIR
+    log_dir = cube_config.get("logging", "host_log_dir")
     if not os.path.isdir(log_dir):
       # The log directory needs to be made.
       logger.debug("Creating log directory: %s" % (log_dir))
@@ -197,7 +190,9 @@ class CubeVm(object):
 
     self.__check_temp_files()
 
-    command = [self._QEMU_BIN, "-readconfig", self._QEMU_CONFIG, "-nographic"]
+    qemu_bin = sim_config.get("qemu", "bin_location")
+    qemu_config = sim_config.get("qemu", "config_location")
+    command = [qemu_bin, "-readconfig", qemu_config, "-nographic"]
     # Add serial options.
     options = self.__make_serial_options(self.__serial_name)
     command.extend(options)
@@ -205,7 +200,7 @@ class CubeVm(object):
     logger.debug("Running command: %s" % str(command))
 
     fnull = file(os.devnull, "w")
-    self.__process = subprocess.Popen(command, stdout=fnull, stdin=fnull)
+    self.__process = subprocess.Popen(command, stdout=fnull)
     logger.info("Started cube VM %d." % (self.__id))
 
     # Wait for the serial interface to exist.
