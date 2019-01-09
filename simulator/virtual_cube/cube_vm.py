@@ -143,9 +143,24 @@ class CubeVm(object):
   def __make_serial_options(self, name):
     """ Creates the QEMU CLI option list for the virtual serial device.
     Args:
-      name: Unique name of the serial device. """
+      name: Unique name of the serial device.
+    Returns:
+      The options list for creating the virtual serial device. """
     options = ["-chardev",
                "socket,path=/tmp/%s,server,nowait,id=vcube_ser" % (name)]
+    return options
+
+  def __make_log_dir_options(self):
+    """ Creates the QEMU CLI option list for mapping the log directory.
+    Returns:
+      The options list for mapping the relavent directory. """
+    # Generate a unique name for the logging directory.
+    base_log_dir = cube_config.get("logging", "host_log_dir")
+    log_dir = "%s%d" % (base_log_dir, self.__id)
+
+    options = ["-fsdev",
+        "local,path=%s,security_model=mapped,readonly=off,id=host1" \
+            % (log_dir)]
     return options
 
   def __extract_disk_image(self):
@@ -176,7 +191,9 @@ class CubeVm(object):
       logger.debug("Removing old serial handle '%s'." % (handle))
       os.remove(handle)
 
-    log_dir = cube_config.get("logging", "host_log_dir")
+    base_log_dir = cube_config.get("logging", "host_log_dir")
+    # Add the cube ID to make it unique.
+    log_dir = "%s%d" % (base_log_dir, self.__id)
     if not os.path.isdir(log_dir):
       # The log directory needs to be made.
       logger.debug("Creating log directory: %s" % (log_dir))
@@ -193,9 +210,13 @@ class CubeVm(object):
     qemu_bin = sim_config.get("qemu", "bin_location")
     qemu_config = sim_config.get("qemu", "config_location")
     command = [qemu_bin, "-readconfig", qemu_config, "-nographic"]
+
     # Add serial options.
-    options = self.__make_serial_options(self.__serial_name)
-    command.extend(options)
+    serial_options = self.__make_serial_options(self.__serial_name)
+    command.extend(serial_options)
+    # Add log directory mapping options.
+    log_dir_options = self.__make_log_dir_options()
+    command.extend(log_dir_options)
 
     logger.debug("Running command: %s" % str(command))
 

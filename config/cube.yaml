@@ -21,7 +21,7 @@ logging:
   # start. (Cube side.)
   vm_log_dir: "/logs"
   # Log directory location on the host system.
-  host_log_dir: "/tmp/cube_logs"
+  host_log_dir: "/tmp/logs_cube"
 
 # Location of the SHM file.
 shm_file: "/dev/shm/tachyon_core"

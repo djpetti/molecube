@@ -15,6 +15,24 @@ cube_config = config.cube_config()
 class TestCubeVm(unittest.TestCase):
   """ Tests for the CubeVm class. """
 
+  def __gen_expected_command(self, cube_num):
+    """ Generates the expected start command for a particular cube number.
+    Args:
+      cube_num: The cube number.
+    Returns:
+      The generated command. """
+    qemu_bin = sim_config.get("qemu", "bin_location")
+    qemu_config = sim_config.get("qemu", "config_location")
+
+    expected_command = [qemu_bin, "-readconfig",
+                        qemu_config, "-nographic", "-chardev",
+                        "socket,path=/tmp/cube%d,server,nowait,id=vcube_ser" \
+                            % (cube_num),
+                        "-fsdev",
+                        "local,path=/tmp/logs_cube%d,security_model=mapped," \
+                            % (cube_num) + "readonly=off,id=host1"]
+    return expected_command
+
   @mock.patch("simulator.virtual_cube.cube_vm.CubeVm._copy_binaries")
   @mock.patch("os.path.exists")
   def setUp(self, mocked_exists, mocked_bin_copy):
@@ -110,11 +128,7 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # Make sure it started the process.
-    qemu_bin = sim_config.get("qemu", "bin_location")
-    qemu_config = sim_config.get("qemu", "config_location")
-    expected_command = [qemu_bin, "-readconfig",
-                        qemu_config, "-nographic", "-chardev",
-                        "socket,path=/tmp/cube0,server,nowait,id=vcube_ser"]
+    expected_command = self.__gen_expected_command(0)
     mocked_popen.assert_called_once_with(expected_command,
                                          stdout=mock.ANY)
 
@@ -122,7 +136,7 @@ class TestCubeVm(unittest.TestCase):
     expected_calls = [mock.call("/tmp/cube0")] * 2
     mocked_exists.assert_has_calls(expected_calls)
     # It should have checked for the log directory.
-    log_dir = cube_config.get("logging", "host_log_dir")
+    log_dir = cube_config.get("logging", "host_log_dir") + "0"
     mocked_isdir.assert_called_once_with(log_dir)
     # It should have started the serial interface.
     self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
@@ -144,11 +158,7 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # Make sure it started the process.
-    qemu_bin = sim_config.get("qemu", "bin_location")
-    qemu_config = sim_config.get("qemu", "config_location")
-    expected_command = [qemu_bin, "-readconfig",
-                        qemu_config, "-nographic", "-chardev",
-                        "socket,path=/tmp/cube0,server,nowait,id=vcube_ser"]
+    expected_command = self.__gen_expected_command(0)
     mocked_popen.assert_called_once_with(expected_command,
                                          stdout=mock.ANY)
 
@@ -156,7 +166,7 @@ class TestCubeVm(unittest.TestCase):
     calls = [mock.call("/tmp/cube0")] * 3
     mocked_exists.assert_has_calls(calls)
     # It should have checked for the log directory.
-    log_dir = cube_config.get("logging", "host_log_dir")
+    log_dir = cube_config.get("logging", "host_log_dir") + "0"
     mocked_isdir.assert_called_once_with(log_dir)
     # It should have started the serial interface.
     self.__serial = mocked_serial.assert_called_once_with("/tmp/cube0")
@@ -226,7 +236,7 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # It should have checked for the log directory.
-    log_dir = cube_config.get("logging", "host_log_dir")
+    log_dir = cube_config.get("logging", "host_log_dir") + "0"
     mocked_isdir.assert_called_once_with(log_dir)
     # It should have created it.
     mocked_mkdir.assert_called_once_with(log_dir)
@@ -248,7 +258,7 @@ class TestCubeVm(unittest.TestCase):
     self.__cube.start()
 
     # It should have checked for the log directory.
-    log_dir = cube_config.get("logging", "host_log_dir")
+    log_dir = cube_config.get("logging", "host_log_dir") + "0"
     mocked_isdir.assert_called_once_with(log_dir)
     # It should not have created it.
     mocked_mkdir.assert_not_called()
