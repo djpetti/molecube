@@ -7,6 +7,7 @@ from simulator.virtual_cube import serial_com
 
 
 _SEPARATOR = serial_com.SerialCom._SEPARATOR
+_MAX_READ = serial_com.SerialCom._MAX_READ
 
 
 class TestSerialCom(unittest.TestCase):
@@ -158,7 +159,7 @@ class TestSerialCom(unittest.TestCase):
     # The first call to read() should have been for the initial separator. The
     # second call should have been for the message and ending separator.
     expected_calls = [mock.call.recv(len(_SEPARATOR)),
-                      mock.call.recv()]
+                      mock.call.recv(_MAX_READ)]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff it.
     mocked_cows.assert_called_once()
@@ -202,9 +203,9 @@ class TestSerialCom(unittest.TestCase):
     # and the fourth call should have been for reading the rest of the message
     # and the next separator.
     expected_calls = [mock.call.recv(len(_SEPARATOR)),
-                      mock.call.recv(),
-                      mock.call.recv(),
-                      mock.call.recv()]
+                      mock.call.recv(_MAX_READ),
+                      mock.call.recv(_MAX_READ),
+                      mock.call.recv(_MAX_READ)]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff it.
     mocked_cows.assert_called_once()
@@ -252,7 +253,7 @@ class TestSerialCom(unittest.TestCase):
     # second call should have been for the first message, ending separator,
     # and second message and its ending separator.
     expected_calls = [mock.call.recv(len(_SEPARATOR)),
-                      mock.call.recv()]
+                      mock.call.recv(_MAX_READ)]
     mocked_socket.assert_has_calls(expected_calls)
     mocked_socket.recv.reset_mock()
     # It should have tried to unstuff it.
@@ -313,7 +314,7 @@ class TestSerialCom(unittest.TestCase):
     # second call should have been for the first message, ending separator, and
     # first byte of the second message.
     expected_calls = [mock.call.recv(len(_SEPARATOR)),
-                      mock.call.recv()]
+                      mock.call.recv(_MAX_READ)]
     mocked_socket.assert_has_calls(expected_calls)
     mocked_socket.recv.reset_mock()
     # It should have tried to unstuff it.
@@ -332,7 +333,7 @@ class TestSerialCom(unittest.TestCase):
 
     # It should have made one call to recv() which should have gotten the end of
     # the second message plus the ending separator.
-    mocked_socket.recv.assert_called_once_with()
+    mocked_socket.recv.assert_called_once_with(_MAX_READ)
     # It should have tried to unstuff it.
     mocked_cows.assert_called_once()
 
@@ -367,7 +368,7 @@ class TestSerialCom(unittest.TestCase):
     # Make sure it tried to call read the proper number of times.
     expected_calls = [mock.call.recv(len(_SEPARATOR)),
                       mock.call.recv(1), mock.call.recv(1),
-                      mock.call.recv(1), mock.call.recv()]
+                      mock.call.recv(1), mock.call.recv(_MAX_READ)]
     mocked_socket.assert_has_calls(expected_calls)
     # It should have tried to unstuff the message.
     mocked_cows.assert_called_once()
@@ -385,7 +386,7 @@ class TestSerialCom(unittest.TestCase):
       coms.append(com)
 
     # Make sure the select call indicates that something is readable.
-    mocked_select.return_value = ([coms[0]], [], [])
+    mocked_select.return_value = ([coms[0]._SerialCom__socket], [], [])
 
     readable = serial_com.SerialCom.select_on(coms)
     # It should have given us the correct one.

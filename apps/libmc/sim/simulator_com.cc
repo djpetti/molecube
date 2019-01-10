@@ -45,18 +45,26 @@ bool SimulatorCom::Open() {
   const char *device = constants::kSimulator.Device;
   const uint32_t baud = constants::kSimulator.BaudRate;
 
-  if (!serial_->Open(device, baud)) {
-    return false;
-  }
-
-  // Send the first zero separator so the recipient knows a message is coming.
-  VLOG(1) << "Sending zero separator.";
-  const uint8_t zero[] = {0, 0};
-  return serial_->SendMessage(zero, 2);
+  return serial_->Open(device, baud);
 }
 
 bool SimulatorCom::SendMessage(const ProtoMessage &message) {
   LOG(INFO) << "Sending message.";
+
+  if (!sent_first_separator_) {
+    // Send the first zero separator so the recipient knows a message is coming.
+    // We only need to do this the first time, because for further packets, the
+    // separator will be included with the preceding message.
+    VLOG(1) << "Sending zero separator.";
+    const uint8_t zero[] = {0, 0};
+    if (!serial_->SendMessage(zero, 2)) {
+      // Failed to send the message.
+      LOG(ERROR) << "Sending initial zero separator failed.";
+      return false;
+    }
+
+    sent_first_separator_ = true;
+  }
 
   const uint32_t length = message.ByteSizeLong();
   // COWS adds 4 bytes of overhead.

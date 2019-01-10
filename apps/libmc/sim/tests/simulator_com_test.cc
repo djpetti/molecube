@@ -94,8 +94,6 @@ TEST_F(SimulatorComTest, OpenTest) {
                                  constants::kSimulator.BaudRate))
       .Times(1)
       .WillOnce(Return(true));
-  // Make it look like sending the initial separator also succeeded.
-  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
 
   // Perform the call to Open, which should work.
   EXPECT_TRUE(com_.Open());
@@ -106,14 +104,10 @@ TEST_F(SimulatorComTest, OpenSerialLinkFailureTest) {
   // Set up the mock to look like opening the serial link failed.
   EXPECT_CALL(mock_serial_, Open(StrEq(constants::kSimulator.Device),
                                  constants::kSimulator.BaudRate))
-      .Times(2)
-      .WillOnce(Return(false))
-      .WillOnce(Return(true));
-  // Make it look like sending the initial separator also failed.
-  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(false));
+      .Times(1)
+      .WillOnce(Return(false));
 
-  // Perform the calls to Open, which should fail twice.
-  EXPECT_FALSE(com_.Open());
+  // Perform the call to Open, which should fail.
   EXPECT_FALSE(com_.Open());
 }
 
@@ -137,8 +131,40 @@ TEST_F(SimulatorComTest, SendMessageTest) {
       .Times(1)
       .WillOnce(Return(true));
 
+  // It should try to send the initial separator.
+  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
+
   EXPECT_TRUE(com_.SendMessage(test_message));
 }
+
+// Tests that SendMessage sends the initial separator only once.
+TEST_F(SimulatorComTest, SendMessageInitialSeparatorTest) {
+  // Create a test message.
+  TestMessage test_message;
+  test_message.set_field1(42);
+  test_message.set_field2(true);
+
+  const uint32_t message_length = test_message.ByteSizeLong();
+  const uint32_t cows_length = message_length + 4;
+  const uint32_t padded_length = cows_length + cows_length % 2;
+
+  // Set up expectations for COWS stuffing.
+  EXPECT_CALL(mock_cows_, CowsStuff(_, padded_length / 2)).Times(2);
+  // It should also send the message over serial.
+  EXPECT_CALL(
+      mock_serial_,
+      SendMessage(BinMessageValid(test_message, cows_length), cows_length))
+      .Times(2)
+      .WillRepeatedly(Return(true));
+
+  // It should try to send the initial separator, but only the first time.
+  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
+
+  EXPECT_TRUE(com_.SendMessage(test_message));
+  // Call it again, during which it should not re-send the initial separator.
+  EXPECT_TRUE(com_.SendMessage(test_message));
+}
+
 
 // Tests that SendMessage handles a failure to send the message.
 TEST_F(SimulatorComTest, SendMessageFailureTest) {
@@ -159,6 +185,22 @@ TEST_F(SimulatorComTest, SendMessageFailureTest) {
       SendMessage(BinMessageValid(test_message, cows_length), cows_length))
       .Times(1)
       .WillOnce(Return(false));
+
+  // It should try to send the initial separator.
+  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
+
+  EXPECT_FALSE(com_.SendMessage(test_message));
+}
+
+// Tests that SendMessage handles a failure to send the initial separator.
+TEST_F(SimulatorComTest, SendMessageSeparatorFailureTest) {
+  // Create a test message.
+  TestMessage test_message;
+  test_message.set_field1(42);
+  test_message.set_field2(true);
+
+  // It should try to send the initial separator, but fail.
+  EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(false));
 
   EXPECT_FALSE(com_.SendMessage(test_message));
 }

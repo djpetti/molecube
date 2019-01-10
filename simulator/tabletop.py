@@ -83,9 +83,15 @@ class Tabletop(object):
     """ Waits for events originating from the cubes, and sent over the serial
     interface. When it receives a message, it dispatches a custom Tkinter event
     which can then be handled in the main thread. """
+    # Flatten the cube array.
+    cubes = []
+    for row in self.__cubes:
+      # Filter out the spaces that are unnocupied.
+      cubes.extend([cube for cube in row if cube is not None])
+
     while True:
       # Handle all events.
-      self.__cube_event_handler.handle_events(self.__cubes)
+      self.__cube_event_handler.handle_events(cubes)
 
   def make_cube(self, color=sim_config.get("appearance", "colors", "cube_red")):
     """ Adds a new cube to the canvas.

@@ -148,6 +148,11 @@ class Cube(object):
     return hash(self.get_id())
 
   def __eq__(self, other):
+    if not isinstance(other, Cube):
+      # It's valid to compare it to something that's not a cube, in which case
+      # they're automatically different.
+      return False
+
     # Two instances are the same if they have the same ID.
     return self.get_id() == other.get_id()
 

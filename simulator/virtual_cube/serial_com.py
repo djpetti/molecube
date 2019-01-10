@@ -16,6 +16,8 @@ class SerialCom(object):
 
   # Separator for serial messages.
   _SEPARATOR = b"\x00\x00"
+  # Maximum number of bytes to read from the socket at once.
+  _MAX_READ = 4096
 
   @classmethod
   def select_on(self, coms):
@@ -26,14 +28,18 @@ class SerialCom(object):
     Returns:
       List of SerialComs that have data ready. """
     # Extract the internal sockets.
-    sockets = [com.__socket for com in coms]
+    sockets = {}
+    for com in coms:
+      sockets[com.__socket] = com
+
     logger.debug("Waiting on %d sockets..." % (len(sockets)))
 
     # Perform the select call.
-    readable, _, _, = select.select(sockets, [], [])
+    readable, _, _, = select.select(sockets.keys(), [], [])
     logger.debug("%d sockets are now readable." % (len(readable)))
 
-    return readable
+    # Extract the SerialComs.
+    return [sockets[socket] for socket in readable]
 
   def __init__(self, serial_fd):
     """
@@ -70,8 +76,11 @@ class SerialCom(object):
     # Try to read the packet separator.
     read = self.__socket.recv(2)
     while read != self._SEPARATOR:
+      logger.debug("Possible separator: '%s'" % (read))
       read = read[-1]
       read += self.__socket.recv(1)
+
+    logger.debug("Found packet start.")
 
   def __read_until_separator(self):
     """ Reads data until it finds a separator. """
@@ -85,7 +94,8 @@ class SerialCom(object):
         self.__data.pop()
 
       # Read anything that is available.
-      read_this_round.extend(self.__socket.recv())
+      read_this_round.extend(self.__socket.recv(self._MAX_READ))
+      logger.debug("Read current round: '%s'" % (read_this_round))
 
       while self._SEPARATOR in read_this_round:
         # We found the end.

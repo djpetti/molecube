@@ -1,6 +1,10 @@
 import Tkinter as tk
+import logging
 
 import event
+
+
+logger = logging.getLogger(__name__)
 
 
 class GuiObject(object):

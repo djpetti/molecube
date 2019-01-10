@@ -48,6 +48,8 @@ class SimulatorCom : public SimulatorComInterface {
   uint8_t *send_buffer_;
   // Internal buffer that we use for storing received messages.
   uint8_t *receive_buffer_;
+  // Whether we've sent the initial packet separator.
+  bool sent_first_separator_ = false;
   // Whether we're synced to packets.
   bool packet_synced_ = false;
   // Amount of space used in the receive buffer.

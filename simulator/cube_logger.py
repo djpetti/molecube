@@ -19,14 +19,14 @@ class CubeLogger(logging.Logger):
     # Set the root logging level.
     self.setLevel(logging.DEBUG)
 
-    log_location = config.get('logging', 'log_file')
+    log_location = sim_config.get('logging', 'log_file')
 
     # Create the Handler for logging data to a file
     file_handler = logging.FileHandler(log_location, mode="w")
     file_handler.setLevel(logging.DEBUG)
     # Create the Handler for logging important messages to stdout.
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.DEBUG)
 
     # Create a Formatter for formatting the log messages
     logger_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')

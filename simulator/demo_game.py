@@ -16,9 +16,13 @@ sim_config = config.simulator_config()
 table = tabletop.Tabletop()
 
 colors = sim_config.subkeys("appearance", "colors")
-letters = ["E", "T", "A", "N", "S"]
+# Eliminate colors that are not cube colors.
+colors = [color for color in colors if color.startswith("cube")]
+
+letters = ["E"]
 for i, letter in enumerate(letters):
-  color = colors[i % len(colors)]
+  color_name = colors[i % len(colors)]
+  color = sim_config.get("appearance", "colors", color_name)
   cube = table.make_cube(color=color)
 
   # Start the letter app.
