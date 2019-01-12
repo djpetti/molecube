@@ -32,7 +32,15 @@ class CubeEvent(Event):
       attr: The attribute to look for.
     Returns:
       The value of the attribute. """
-    return self._tk_event.__getattr__(attr)
+    return getattr(self._tk_event, attr)
+
+  @classmethod
+  def get_cube_identifier(cls, cube):
+    """ Gets a version of the event that is customized for a specific cube. This
+    gives us a nice mechanism for dispatching relevant events to specific cubes.
+    Args:
+      cube: The relevant cube instance. """
+    raise NotImplementedError("Must be implemented by subclass.")
 
 class MouseDragEvent(MouseEvent):
   """ Emitted every time the mouse is dragged with the primary button held down.
@@ -62,4 +70,8 @@ class GraphicsEvent(CubeEvent):
 
   @classmethod
   def get_identifier(cls):
-    return "<Graphics>"
+    return "<<Graphics>>"
+
+  @classmethod
+  def get_cube_identifier(cls, cube):
+    return "<<Graphics-%d>>" % (cube.get_id())

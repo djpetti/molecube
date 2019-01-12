@@ -1,5 +1,5 @@
 package(default_visibility=["//apps/libmc:__subpackages__",
-                            "//simulator/virtual_cube:__subpackages__"])
+                            "//simulator:__subpackages__"])
 load("@build_stack_rules_proto//python:python_proto_library.bzl",
      "python_proto_library")
 
@@ -50,4 +50,9 @@ cc_proto_library(
 proto_library(
   name = "graphics_message",
   srcs = ["graphics_message.proto"],
+)
+
+python_proto_library(
+  name = "python_graphics_message",
+  deps = [":graphics_message"],
 )

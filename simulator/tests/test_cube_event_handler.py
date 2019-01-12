@@ -46,7 +46,7 @@ class TestCubeEventHandler(unittest.TestCase):
     # It should have dispatched the event.
     message.HasMessage.assert_called_once_with("graphics")
     generator_instance = self.__mocked_graphics_generator.return_value
-    generator_instance.dispatch.assert_called_once_with(0, message)
+    generator_instance.dispatch.assert_called_once_with(cubes[0], message)
 
 
 if __name__ == "__main__":

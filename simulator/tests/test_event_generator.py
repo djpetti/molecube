@@ -24,12 +24,12 @@ class TestGraphicsEventGenerator(unittest.TestCase):
     graphics_message.image.height = 200
     graphics_message.image.data = "image_data"
 
-    self.__generator.dispatch(0, message)
+    cube = mock.MagicMock()
+    self.__generator.dispatch(cube, message)
 
     # It should have dispatched the event correctly.
-    event_name = event.GraphicsEvent.get_identifier()
-    self.__mocked_canvas.generate_event \
-        .assert_called_once_with(event_name, cube_id=0,
+    self.__mocked_canvas.generate_cube_event \
+        .assert_called_once_with(event.GraphicsEvent, cube,
                                  op_type=graphics_message.op_type,
                                  image_width=graphics_message.image.width,
                                  image_height=graphics_message.image.height,

@@ -15,25 +15,26 @@ class _EventGenerator(object):
       canvas: The Canvas to generate events for.
       event_class: Event subclass that this generator emits. """
     self.__canvas = canvas
-    self.__event_name = event_class.get_identifier()
+    self.__event_class = event_class
 
-  def _dispatch(self, cube_id, **kwargs):
+  def _dispatch(self, cube, **kwargs):
     """ Dispatches a new event to the Tkinter loop.
     Args:
-      cube_id: The ID of the cube that this message came from.
+      cube: The cube that this message came from.
       Keyword arguments will be used as the event parameters. """
     # Add the cube ID as an event parameter.
     event_params = kwargs
-    event_params["cube_id"] = cube_id
 
-    logger.debug("Dispatching %s event: %s" % (self.__event_name,
+    # Dispatch the event for a particular cube.
+    event_name = self.__event_class.get_cube_identifier(cube)
+    logger.debug("Dispatching %s event: %s" % (event_name,
                                                str(event_params)))
-    self.__canvas.generate_event(self.__event_name, **event_params)
+    self.__canvas.generate_cube_event(self.__event_class, cube, **event_params)
 
-  def dispatch(self, cube_id, message):
+  def dispatch(self, cube, message):
     """ Dispatches an event to the Tkinter loop.
     Args:
-      cube_id: The ID of the cube that this message came from.
+      cube: The cube that this message came from.
       message: The SimMessage to base the event on. """
     raise NotImplementedError("dispatch() must be implemented by subclass.")
 
@@ -47,7 +48,7 @@ class GraphicsEventGenerator(_EventGenerator):
       canvas: The Canvas to generate events for. """
     super(GraphicsEventGenerator, self).__init__(canvas, event.GraphicsEvent)
 
-  def dispatch(self, cube_id, message):
+  def dispatch(self, cube, message):
     # Extract the graphics message.
     graphics_message = message.graphics
 
@@ -56,5 +57,5 @@ class GraphicsEventGenerator(_EventGenerator):
     image_height = graphics_message.image.height
     image_data = graphics_message.image.data
 
-    self._dispatch(cube_id, op_type=op_type, image_width=image_width,
+    self._dispatch(cube, op_type=op_type, image_width=image_width,
                    image_height=image_height, image_data=image_data)

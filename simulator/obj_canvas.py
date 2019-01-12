@@ -53,6 +53,20 @@ class GuiObject(object):
     # Do the binding.
     self._do_event_bind(tk_name, wrapped)
 
+  def bind_cube_event(self, event_type, cube, callback):
+    """ Binds a CubeEvent to this object.
+    Args:
+      event_type: The event class.
+      cube: The cube that the event is associated with.
+      callback: The callback to run when the event happens. It will be passed a
+                single instance of CubeEvent as an argument. """
+    # Create the wrapped callback.
+    wrapped = GuiObject.Callback(event_type, callback)
+    # Get the name of the event.
+    name = event_type.get_cube_identifier(cube)
+    # Do the binding.
+    self._do_event_bind(name, wrapped)
+
 
 class Canvas(GuiObject):
   """ Simple wrapper around Tkinter canvas. """
@@ -173,10 +187,17 @@ class Canvas(GuiObject):
   def generate_event(self, event_type, **kwargs):
     """ Generates a custom Tkinter event.
     Args:
-      event_type: The type of the event, as a string.
+      event_type: The type of the event, as an Event subclass.
       All other keyword arguments will be used as event attributes. """
-    self.__window.event_generate(event_type, **kwargs)
+    self.__window.event_generate(event_type.get_identifier(), **kwargs)
 
+  def generate_cube_event(self, event_type, cube, **kwargs):
+    """ Generates a custom Tkinter event that is specific to a single cube.
+    Args:
+      event_type: The type of the event, as an CubeEvent subclass.
+      cube: The cube instance that the event is specific to.
+      All other keyword arguments will be used as event attributes. """
+    self.__window.event_generate(event_type.get_cube_identifier(cube), **kwargs)
 
 class CanvasObject(GuiObject):
   """ Handles drawing an object in a Tkinter canvas window. """
@@ -238,7 +259,6 @@ class CanvasObject(GuiObject):
       return True
 
     return False
-
 
   def set_fill(self, fill):
     """ Changes the fill of the object. """
@@ -439,7 +459,7 @@ class Text(Shape):
     return (self._pos_x, self._pos_y, self._pos_x, self._pos_y)
 
 class Line(CanvasObject):
-  """ Extends functionality of CanvasObject to draw lines"""
+  """ Extends functionality of CanvasObject to draw lines. """
 
   def __init__(self, canvas, pos1, pos2, **kwargs):
     """
@@ -457,7 +477,89 @@ class Line(CanvasObject):
     """ Draw the Line on the canvas. """
     # Get the raw canvas to draw with.
     canvas = self._canvas.get_raw_canvas()
-    self._reference = canvas.create_line(self._x_1, self._y_1, self._x_2, self._y_2, fill = self._fill)
+    self._reference = canvas.create_line(self._x_1, self._y_1, self._x_2,
+                                         self._y_2, fill=self._fill)
 
   def get_bbox(self):
     return(self._x_1, self._y_1, self._x_2, self._y_2)
+
+class Image(Shape):
+  """ Displays images on the canvas. """
+
+  @classmethod
+  def _convert_numpy(cls, image):
+    """ Converts a Numpy image into something that can be understood by
+    PhotoImage.
+    Args:
+      image: The input Numpy image.
+    Returns:
+      The text representation for PhotoImage. """
+    def to_hex(rgb):
+      """ Converts an RGB tuple to hex form.
+      Args:
+        rgb: The RGB tuple to convert.
+      Returns:
+        The hex version of this color. """
+      return "#%02x%02x%02x" % rgb
+
+    # Convert each row.
+    rows = []
+    for i in range(0, image.shape[0]):
+      row = image[i]
+      rows.append("{" + \
+          " ".join([to_hex(tuple(pixel)) for pixel in row]) + "}")
+
+    # Join the rows.
+    return " ".join(rows)
+
+  def __init__(self, canvas, pos, image, **kwargs):
+    """
+    Args:
+      canvas: The canvas to draw on.
+      pos: The position of the image center.
+      image: The image to draw, as a Numpy array of shape (h, w, 3). """
+    # Check for unsupported keyword arguments.
+    if "fill" in kwargs:
+      raise ValueError("Image cannot have a fill.")
+    if "outline" in kwargs:
+      raise ValueError("Image cannot have an outline.")
+
+    self.__image = image
+
+    # Create the initial PhotoImage object.
+    height, width, _ = self.__image.shape
+    self.__photo_image = tk.PhotoImage(width=width, height=height)
+
+    super(Image, self).__init__(canvas, pos)
+
+  def _draw_object(self):
+    # Get the raw canvas to draw with.
+    canvas = self._canvas.get_raw_canvas()
+
+    # Convert the numpy array.
+    pixels = self._convert_numpy(self.__image)
+    # Set the image.
+    height, width, _ = self.__image.shape
+    self.__photo_image.put(pixels, (0, 0, width - 1, height - 1))
+
+    # Draw the image.
+    self._reference = canvas.create_image(self._pos_x, self._pos_y,
+                                          image=self.__photo_image)
+
+  def get_bbox(self):
+    height, width, _ = self.__image.shape
+
+    # Calculate corner points.
+    p1_x = self._pos_x - width / 2
+    p1_y = self._pos_y - height / 2
+    p2_x = self._pos_x + width / 2
+    p2_y = self._pos_y + height / 2
+
+    return (p1_x, p1_y, p2_x, p2_y)
+
+  def update(self, image):
+    """ Updates the image.
+    Args:
+      image: The new Numpy image to display. """
+    self.__image = image
+    self._draw_object()

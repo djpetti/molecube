@@ -3,7 +3,8 @@ py_library(
   srcs = glob(["*.py"], exclude=["demo_game.py"]),
   data = ["config.ini"],
   deps = ["//simulator/virtual_cube",
-          "//config"],
+          "//config",
+          "//apps/libmc/sim/protobuf:python_graphics_message"],
   visibility = ["//simulator:__subpackages__"],
 )
 

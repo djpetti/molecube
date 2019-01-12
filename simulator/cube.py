@@ -1,5 +1,9 @@
 import logging
 
+import numpy as np
+
+from apps.libmc.sim.protobuf import graphics_message_pb2
+
 from virtual_cube import cube_vm
 
 from config import config
@@ -181,6 +185,9 @@ class Cube(object):
 
     # Bind mouse events for the cube.
     case.bind_event(event.MousePressEvent, self.__cube_clicked)
+    # Bind an event for handling graphics messages.
+    self.__canvas.bind_cube_event(event.GraphicsEvent, self,
+                                  self.__screen_changed)
 
   def __cube_clicked(self, event):
     """ Called when the user presses the mouse button over the cube. """
@@ -192,6 +199,24 @@ class Cube(object):
     self.__clear_connections()
     # When moving, keeps track of the previous mouse position.
     self.__prev_mouse_x, self.__prev_mouse_y = event.get_pos()
+
+  def __screen_changed(self, event):
+    """ Called when the cube software changes the state of the screen. """
+    if event.op_type != graphics_message_pb2.GraphicsMessage.PAINT:
+      # We only support PAINT messages.
+      logger.warning("Unsupported graphics op type: %d" % (event.op_type))
+      return
+
+    # Create a Numpy representation of the image.
+    image = np.frombuffer(event.image_data, dtype=np.uint8)
+    width = event.image_width
+    height = event.image_height
+    image = np.reshape(image, (height, width, 3))
+
+    # Display the image.
+    logger.debug("Cube %d: Displaying %dx%d frame." % (self.get_id(), width,
+                                                       height))
+    self.__screen.update(image)
 
   def __config_changed_hook(self):
     """ Run when the connection configuration changes. It takes care of

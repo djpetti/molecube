@@ -8,7 +8,7 @@ RUN apt-get update && \
                        python-tk
 
 # Install python dependencies.
-RUN pip install mock pyserial pyyaml
+RUN pip install mock pyserial pyyaml numpy
 
 # Install Bazel.
 RUN wget -O bazel_install.sh \

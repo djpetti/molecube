@@ -9,7 +9,7 @@ message Image {
   uint32 width = 1;
   // Height of the image.
   uint32 height = 2;
-  // Image data represented in pure bytes. Every 3 bytes is an RGB tripple,
+  // Image data represented in pure bytes. Every 3 bytes is an RGB triple,
   // where each sub-pixel value ranges from 0-255. The image is stored in
   // row-major order.
   bytes data = 3;

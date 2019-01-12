@@ -1,3 +1,5 @@
+import numpy as np
+
 from config import config
 import obj_canvas
 
@@ -8,8 +10,8 @@ sim_config = config.simulator_config()
 
 class Display(obj_canvas.Shape):
   """ Simulates the display hardware for the cube. """
-  # TODO (danielp): Re-implement this with a better class hierarchy, possibly
-  # with a generic "Container" superclass.
+  # TODO (danielp): Possibly make some sort of generic Container superclass and
+  # inherit from that.
 
   def __init__(self, canvas, pos, size):
     """
@@ -19,72 +21,58 @@ class Display(obj_canvas.Shape):
       size: The size of the display. """
     self.__size = size
 
-    # Object representing the display background.
-    self.__background = None
-    # List of all the canvas objects on-screen.
-    self.__display_objs = []
+    # Generate default background.
+    self.__background = self.__gen_background()
+    # The image currently being displayed.
+    self.__np_image = self.__background
+    self.__image = None
 
     # Draw on the canvas.
-    screen_color = sim_config.get("appearance", "colors", "screen")
-    super(Display, self).__init__(canvas, pos,
-                                  fill=screen_color,
-                                  outline=screen_color)
+    super(Display, self).__init__(canvas, pos)
+
+  def __gen_background(self):
+    """ Generates the default background image.
+    Returns:
+      The background image. """
+    # The default screen is just a solid color.
+    screen_color_hex = sim_config.get("appearance", "colors", "screen")
+
+    # Convert back to RGB.
+    screen_color = screen_color_hex.lstrip("#")
+    channels = [screen_color[i:i + 2] for i in range(0, len(screen_color), 2)]
+    screen_color = [int(channel, 16) for channel in channels]
+
+    # Create solid image.
+    width, height = self.__size
+    return np.tile(screen_color, (height, width, 1))
 
   def _draw_object(self):
-    # Draw the background.
-    pos = (self._pos_x, self._pos_y)
-    self.__background = obj_canvas.Rectangle(self._canvas, pos, self.__size,
-                                             fill=self._fill,
-                                             outline=self._outline)
+    # Draw the screen.
+    if not self.__image:
+      # Create the new image.
+      pos = (self._pos_x, self._pos_y)
+      self.__image = obj_canvas.Image(self._canvas, pos, self.__np_image)
+    else:
+      # Update the old one.
+      self.__image.update(self.__np_image)
 
-    self.__display_objs.append(self.__background)
-    # In this case, reference just points to the background.
-    self._reference = self.__background._reference
+    # Since this entire class essentially wraps an Image object, the reference
+    # should just alias to the image reference.
+    self._reference = self.__image._reference
 
   def get_bbox(self):
-    # To implement this, we can just use the bbox of the background.
-    return self.__background.get_bbox()
+    # To implement this, we can just use the bbox of the internal image.
+    return self.__image.get_bbox()
 
-  def move(self, x_shift, y_shift):
-    self._pos_x += x_shift
-    self._pos_y += y_shift
-
-    for item in self.__display_objs:
-      item.move(x_shift, y_shift)
-
-  def delete(self):
-    for item in self.__display_objs:
-      item.delete()
-
-    self.__display_objs = []
-    self._reference = None
-
-  def draw_text(self, text, pos, size):
-    """ Draws text on the display.
+  def update(self, image):
+    """ Updates the displayed image.
     Args:
-      text: The text to draw.
-      pos: The position on the display to draw at.
-      size: The size of the text. """
-    font = ("Baumans", size)
-
-    # The pos is relative to the screen center.
-    screen_x, screen_y = self.__background.get_pos()
-    rel_x = screen_x + pos[0]
-    rel_y = screen_y + pos[0]
-    rel_pos = (rel_x, rel_y)
-
-    item = obj_canvas.Text(self._canvas, rel_pos, text, font)
-
-    # Add to the list of display objects.
-    self.__display_objs.append(item)
+      image: The new image to use. Should be a Numpy array of shape (w, h, 3).
+    """
+    self.__np_image = image
+    self._draw_object()
 
   def clear(self):
-    """ Clears all objects from the display. """
-    for item in self.__display_objs:
-      if item == self.__background:
-        # Don't delete the background.
-        continue
-
-      item.delete()
-
-    self.__display_objs = [self.__background]
+    """ Resets the display with the default background. """
+    self.__np_image = self.__background
+    self._draw_object()
