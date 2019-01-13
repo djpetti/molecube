@@ -48,7 +48,7 @@ TEST_F(SimulatorProcessTest, ComOpenFailureTest) {
   // Make it look like opening the serial failed.
   EXPECT_CALL(mock_com_, Open()).Times(1).WillOnce(Return(false));
 
-  EXPECT_FALSE(process_.Run());
+  process_.Run();
 }
 
 // Tests that Run() works under normal conditions.
@@ -70,7 +70,7 @@ TEST_F(SimulatorProcessTest, RunTest) {
   // Expect the message to be dispatched.
   EXPECT_CALL(mock_dispatcher_, DispatchMessage(_)).Times(1);
 
-  EXPECT_FALSE(process_.Run());
+  process_.Run();
 }
 
 // Tests that Run() works when it shouldn't dispatch a system event.
@@ -86,7 +86,7 @@ TEST_F(SimulatorProcessTest, RunNoSystemDispatchTest) {
 
   // No system submessage should be set, meaning that nothing should be
   // dispatched.
-  EXPECT_FALSE(process_.Run());
+  process_.Run();
 }
 
 }  // namespace testing

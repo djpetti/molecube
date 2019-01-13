@@ -13,11 +13,8 @@ int main(int argc, char **argv) {
 
   // Create simulator process and run forever.
   ::libmc::sim::SimulatorProcess process;
-  if (!process.Run()) {
-    LOG(ERROR) << "Exiting simulator process.";
-    return 1;
-  }
+  process.Run();
 
-  LOG(INFO) << "Simulator process exiting normally.";
+  LOG(ERROR) << "Exiting simulator process.";
   return 0;
 }

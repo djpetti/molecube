@@ -25,8 +25,7 @@ int main(int argc, char **argv) {
 
   // Create the process and run forever.
   ::libmc::core::SystemManagerProcess process(queue);
-  while (process.RunIteration())
-    ;
+  process.Run();
 
   LOG(ERROR) << "Exiting system manager process.";
   return 1;

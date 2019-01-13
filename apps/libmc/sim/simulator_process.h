@@ -2,6 +2,7 @@
 #define LIBMC_SIM_SIMULATOR_PROCESS_H_
 
 #include "apps/libmc/core/events/event_dispatcher_interface.h"
+#include "apps/libmc/core/process_interface.h"
 #include "simulator_com_interface.h"
 
 namespace libmc {
@@ -9,7 +10,7 @@ namespace sim {
 
 // This process is designed to handle all of the direct interaction with the
 // simulator.
-class SimulatorProcess {
+class SimulatorProcess : public core::ProcessInterface {
  public:
   SimulatorProcess();
   // Alternate constructor that allows for dependency injection during testing.
@@ -20,10 +21,7 @@ class SimulatorProcess {
                    core::events::EventDispatcherInterface *dispatcher);
   ~SimulatorProcess();
 
-  // Runs the process indefinitely.
-  // Returns:
-  //  True if the process exited normally, false if it failed.
-  bool Run();
+  virtual void Run();
 
  private:
   // Performs one-time setup.

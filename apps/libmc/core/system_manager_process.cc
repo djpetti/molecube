@@ -15,6 +15,10 @@ SystemManagerProcess::SystemManagerProcess(
     const ::std::unique_ptr<SystemEventQueueType> &queue)
     : queue_(queue) {}
 
+void SystemManagerProcess::Run() {
+  while (RunIteration());
+}
+
 bool SystemManagerProcess::RunIteration() {
   // Receive the next message from the queue.
   SystemEvent event;

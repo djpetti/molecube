@@ -11,11 +11,9 @@ class ProcessInterface {
  public:
   virtual ~ProcessInterface() = default;
 
-  // Runs a single iteration of the process. This may block waiting for stuff to
-  // do.
-  // Returns:
-  //  True if running it succeeded, false otherwise.
-  virtual bool RunIteration() = 0;
+  // Runs the process indefinitely. This never exits. If it does exit, that
+  // means there was some sort of unrecoverable failure.
+  virtual void Run() = 0;
 };
 
 }  // namespace core

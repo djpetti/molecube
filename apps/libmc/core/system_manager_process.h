@@ -21,7 +21,7 @@ class SystemManagerProcess : public ProcessInterface {
   SystemManagerProcess(const ::std::unique_ptr<SystemEventQueueType> &queue);
   virtual ~SystemManagerProcess() = default;
 
-  virtual bool RunIteration();
+  virtual void Run();
 
  private:
   // Shuts down the cube.
@@ -29,6 +29,10 @@ class SystemManagerProcess : public ProcessInterface {
   //  When this works, it never returns. Otherwise, it should return false on
   //  failure.
   bool Shutdown();
+  // Runs a single iteration of the process.
+  // Returns:
+  //  True if running this iteration succeeded, false otherwise.
+  bool RunIteration();
 
   // Queue that we receive events on.
   const ::std::unique_ptr<SystemEventQueueType> &queue_;

@@ -32,19 +32,13 @@ SimulatorProcess::~SimulatorProcess() {
   }
 }
 
-bool SimulatorProcess::Run() {
+void SimulatorProcess::Run() {
   // Perform set-up.
   if (!SetUp()) {
-    return false;
+    return;
   }
 
-  while (true) {
-    if (!HandleSerialMessage()) {
-      return false;
-    }
-  }
-
-  return true;
+  while (HandleSerialMessage());
 }
 
 bool SimulatorProcess::SetUp() {
