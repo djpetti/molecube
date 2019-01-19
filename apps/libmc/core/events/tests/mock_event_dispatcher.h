@@ -3,8 +3,6 @@
 
 #include "gmock/gmock.h"
 
-#include "google/protobuf/message_lite.h"
-
 #include "apps/libmc/core/events/event_dispatcher_interface.h"
 #include "apps/libmc/core/events/event.h"
 
@@ -17,8 +15,6 @@ namespace testing {
 class MockEventDispatcher : public EventDispatcherInterface {
  public:
   MOCK_METHOD1(Dispatch, bool(EventCommon *event));
-  MOCK_METHOD1(DispatchMessage,
-               bool(const ::google::protobuf::MessageLite *message));
 };
 
 }  // namespace testing

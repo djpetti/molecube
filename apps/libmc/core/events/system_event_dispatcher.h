@@ -7,7 +7,8 @@
 
 #include "tachyon/lib/queue_interface.h"
 
-#include "event_dispatcher_interface.h"
+#include "event.h"
+#include "proto_event_dispatcher_interface.h"
 #include "system_event.h"
 
 namespace libmc {
@@ -15,8 +16,11 @@ namespace core {
 namespace events {
 
 // Dispatcher for System events.
-class SystemEventDispatcher : public EventDispatcherInterface {
+class SystemEventDispatcher : public ProtoEventDispatcherInterface {
  public:
+  // Typedef for the queue type.
+  typedef ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> QueuePtr;
+
   // Gets a singleton instance of this class.
   // Returns:
   //  The singleton instance, creating it if necessary.
@@ -28,8 +32,7 @@ class SystemEventDispatcher : public EventDispatcherInterface {
   //  queue: The new queue to use for this instance.
   // Returns:
   //  The instance that it created.
-  static SystemEventDispatcher &CreateWithQueue(
-      const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue);
+  static SystemEventDispatcher &CreateWithQueue(const QueuePtr &queue);
 
   virtual ~SystemEventDispatcher() = default;
 
@@ -52,11 +55,10 @@ class SystemEventDispatcher : public EventDispatcherInterface {
   // Private constructor to force use of singleton.
   // Args:
   //  queue: The queue to send events to the system manager process on.
-  SystemEventDispatcher(
-      const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue);
+  SystemEventDispatcher(const QueuePtr &queue);
 
   // Queue for communicating with the system manager process.
-  const ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> &queue_;
+  const QueuePtr &queue_;
 };
 
 }  // namespace events

@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "apps/libmc/core/events/tests/mock_event_dispatcher.h"
+#include "apps/libmc/core/events/tests/mock_proto_event_dispatcher.h"
 #include "apps/libmc/sim/protobuf/sim_message.pb.h"
 #include "apps/libmc/sim/protobuf/system_message.pb.h"
 #include "apps/libmc/sim/simulator_process.h"
@@ -37,7 +37,7 @@ class SimulatorProcessTest : public ::testing::Test {
 
   // Mock dependencies.
   StrictMock<MockSimulatorCom> mock_com_;
-  StrictMock<core::events::testing::MockEventDispatcher> mock_dispatcher_;
+  StrictMock<core::events::testing::MockProtoEventDispatcher> mock_dispatcher_;
 
   // SimulatorProcess class to use for testing.
   SimulatorProcess process_;

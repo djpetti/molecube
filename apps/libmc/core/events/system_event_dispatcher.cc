@@ -1,7 +1,5 @@
 #include "system_event_dispatcher.h"
 
-#include <assert.h>
-
 #include "glog/logging.h"
 
 #include "tachyon/lib/queue.h"
@@ -13,7 +11,6 @@ namespace libmc {
 namespace core {
 namespace events {
 
-using ::tachyon::QueueInterface;
 using ::tachyon::Queue;
 
 SystemEventDispatcher &SystemEventDispatcher::GetInstance() {
@@ -21,21 +18,19 @@ SystemEventDispatcher &SystemEventDispatcher::GetInstance() {
 
   // This is a slight abuse of the static keyword, but it makes our life easier
   // by guaranteeing that this will be created once and eventually destroyed.
-  static const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue =
-      Queue<SystemEvent>::FetchProducerQueue(
-          constants::kQueueNames.SysManagerQueue);
+  static const QueuePtr &queue = Queue<SystemEvent>::FetchProducerQueue(
+      constants::kQueueNames.SysManagerQueue);
   static SystemEventDispatcher instance(queue);
   return instance;
 }
 
 SystemEventDispatcher &SystemEventDispatcher::CreateWithQueue(
-    const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue) {
+    const QueuePtr &queue) {
   static SystemEventDispatcher instance(queue);
   return instance;
 }
 
-SystemEventDispatcher::SystemEventDispatcher(
-    const ::std::unique_ptr<QueueInterface<SystemEvent>> &queue)
+SystemEventDispatcher::SystemEventDispatcher(const QueuePtr &queue)
     : queue_(queue) {}
 
 bool SystemEventDispatcher::Dispatch(EventCommon *event) {
@@ -71,7 +66,7 @@ bool SystemEventDispatcher::DispatchMessage(
   const sim::SystemMessage *sys_message =
       dynamic_cast<const sim::SystemMessage *>(message);
   // Check that a valid message was passed.
-  assert(sys_message);
+  CHECK_NOTNULL(sys_message);
 
   // Dispatch an event based on the contents.
   return Dispatch(sys_message->shutdown());
