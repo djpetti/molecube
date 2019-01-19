@@ -13,9 +13,7 @@ cc_binary(
   name = "system_manager_process",
   srcs = ["system_manager_process_main.cc"],
   deps = [":core",
-          "//apps/libmc:constants",
-          "//apps/libmc/core/events",
-          "@tachyon//:tachyon"],
+          "//apps/libmc/core/events"],
   copts = ["-Iexternal/"],
   visibility = ["//simulator:__subpackages__"],
 )

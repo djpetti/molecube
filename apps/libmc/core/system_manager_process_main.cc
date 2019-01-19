@@ -1,14 +1,10 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-#include "tachyon/lib/queue.h"
-
-#include "apps/libmc/constants.h"
-#include "apps/libmc/core/events/system_event.h"
+#include "events/system_event_listener.h"
 #include "system_manager_process.h"
 
-using ::libmc::constants::kQueueNames;
-using ::libmc::core::events::SystemEvent;
+using ::libmc::core::events::SystemEventListener;
 
 int main(int argc, char **argv) {
   // Initialize logging.
@@ -18,13 +14,11 @@ int main(int argc, char **argv) {
 
   LOG(INFO) << "Starting system manager process.";
 
-  // Fetch the queue to use.
-  VLOG(1) << "Fetching queue: " << kQueueNames.SysManagerQueue;
-  auto queue =
-      ::tachyon::Queue<SystemEvent>::FetchQueue(kQueueNames.SysManagerQueue);
+  // Create the listener.
+  SystemEventListener &event_listener = SystemEventListener::GetInstance();
 
   // Create the process and run forever.
-  ::libmc::core::SystemManagerProcess process(queue);
+  ::libmc::core::SystemManagerProcess process(&event_listener);
   process.Run();
 
   LOG(ERROR) << "Exiting system manager process.";

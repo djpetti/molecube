@@ -6,14 +6,18 @@
 
 #include "glog/logging.h"
 
+#include "apps/libmc/core/events/event.h"
+#include "apps/libmc/core/events/system_event.h"
+
 namespace libmc {
 namespace core {
 
+using events::EventListenerInterface;
+using events::EventType;
 using events::SystemEvent;
 
-SystemManagerProcess::SystemManagerProcess(
-    const ::std::unique_ptr<SystemEventQueueType> &queue)
-    : queue_(queue) {}
+SystemManagerProcess::SystemManagerProcess(EventListenerInterface *listener)
+    : listener_(CHECK_NOTNULL(listener)) {}
 
 void SystemManagerProcess::Run() {
   while (RunIteration());
@@ -22,8 +26,10 @@ void SystemManagerProcess::Run() {
 bool SystemManagerProcess::RunIteration() {
   // Receive the next message from the queue.
   SystemEvent event;
-  queue_->DequeueNextBlocking(&event);
-  VLOG(1) << "Received new message.";
+  listener_->Listen(&(event.Common));
+  // Make sure the event is actually of the right type.
+  DLOG_IF(FATAL, event.Common.Type != EventType::SYSTEM)
+      << "Expected SystemEvent.";
 
   bool success = true;
 
