@@ -1,13 +1,11 @@
 #include "system_manager_process.h"
 
-#include <linux/reboot.h>
-#include <unistd.h>
-#include <sys/reboot.h>
-
 #include "glog/logging.h"
 
 #include "apps/libmc/core/events/event.h"
 #include "apps/libmc/core/events/system_event.h"
+#include "apps/libmc/core/events/system_event_listener.h"
+#include "linux_management.h"
 
 namespace libmc {
 namespace core {
@@ -15,9 +13,15 @@ namespace core {
 using events::EventListenerInterface;
 using events::EventType;
 using events::SystemEvent;
+using events::SystemEventListener;
 
-SystemManagerProcess::SystemManagerProcess(EventListenerInterface *listener)
-    : listener_(CHECK_NOTNULL(listener)) {}
+SystemManagerProcess::SystemManagerProcess()
+    : SystemManagerProcess(&SystemEventListener::GetInstance(),
+                           &LinuxManagement::GetInstance()) {}
+
+SystemManagerProcess::SystemManagerProcess(
+    EventListenerInterface *listener, const LinuxManagementInterface *linux)
+    : listener_(CHECK_NOTNULL(listener)), linux_(CHECK_NOTNULL(linux)) {}
 
 void SystemManagerProcess::Run() {
   while (RunIteration());
@@ -45,9 +49,9 @@ bool SystemManagerProcess::Shutdown() {
   LOG(INFO) << "System will now reboot.";
 
   // Flush any buffers to disk.
-  sync();
+  linux_->Sync();
 
-  if (reboot(LINUX_REBOOT_CMD_POWER_OFF) < 0) {
+  if (!linux_->Halt()) {
     // Failure to halt.
     PLOG(ERROR) << "Failed to halt";
     return false;

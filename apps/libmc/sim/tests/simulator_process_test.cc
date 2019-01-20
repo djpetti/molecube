@@ -21,7 +21,7 @@ ACTION_P(SetSystem, system) {
   sim_message->set_allocated_system(system);
 }
 
-}
+}  // namespace
 
 using ::testing::_;
 using ::testing::DoAll;

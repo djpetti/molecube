@@ -3,9 +3,11 @@ cc_library(
   copts = ["-Iexternal/gtest/googlemock/include"],
   hdrs = glob(["mock_*.h"]),
   deps = ["//apps/libmc/core",
+          "@com_google_protobuf//:protobuf_lite",
           "@gtest//:gmock"],
   restricted_to = ["//cpus:x86"],
-  visibility = ["//apps/libmc/sim/tests:__pkg__"],
+  visibility = ["//apps/libmc/sim/tests:__pkg__",
+                "//apps/libmc/core/tests:__pkg__"],
 )
 
 cc_test(

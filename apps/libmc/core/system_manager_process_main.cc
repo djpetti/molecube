@@ -1,10 +1,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-#include "events/system_event_listener.h"
 #include "system_manager_process.h"
-
-using ::libmc::core::events::SystemEventListener;
 
 int main(int argc, char **argv) {
   // Initialize logging.
@@ -14,11 +11,8 @@ int main(int argc, char **argv) {
 
   LOG(INFO) << "Starting system manager process.";
 
-  // Create the listener.
-  SystemEventListener &event_listener = SystemEventListener::GetInstance();
-
   // Create the process and run forever.
-  ::libmc::core::SystemManagerProcess process(&event_listener);
+  ::libmc::core::SystemManagerProcess process;
   process.Run();
 
   LOG(ERROR) << "Exiting system manager process.";
