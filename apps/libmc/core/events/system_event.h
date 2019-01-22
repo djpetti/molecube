@@ -1,5 +1,5 @@
-#ifndef APPS_LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_
-#define APPS_LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_
+#ifndef LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_
+#define LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_
 
 #include "event.h"
 
@@ -19,4 +19,4 @@ struct SystemEvent {
 }  // namespace core
 }  // namespace libmc
 
-#endif  // APPS_LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_
+#endif  // LIBMC_CORE_EVENTS_SYSTEM_EVENT_H_

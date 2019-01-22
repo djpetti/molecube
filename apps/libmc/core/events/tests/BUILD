@@ -37,3 +37,18 @@ cc_test(
   size = "small",
   restricted_to = ["//cpus:x86"],
 )
+
+cc_test(
+  name = "graphics_event_dispatcher_test",
+  copts = ["-Iexternal/gtest/googletest/include",
+           "-Iexternal/gtest/googlemock/include",
+           "-Iexternal/"],
+  srcs = ["graphics_event_dispatcher_test.cc"],
+  deps = ["//apps/libmc/core/events",
+          "//apps/libmc:constants",
+          "@gtest//:gtest",
+          "@gtest//:gmock",
+          "@tachyon//:tachyon_test"],
+  size = "small",
+  restricted_to = ["//cpus:x86"],
+)

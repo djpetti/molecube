@@ -9,6 +9,8 @@ namespace events {
 enum class EventType {
   // System event.
   SYSTEM,
+  // Graphics event.
+  GRAPHICS,
 };
 
 // Defines the common part of all events. This MUST ALWAYS be the first item in
