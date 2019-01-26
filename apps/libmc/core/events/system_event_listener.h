@@ -30,7 +30,8 @@ class SystemEventListener : public EventListenerInterface {
   //  queue: The new queue to use for this instance.
   // Returns:
   //  The instance that it created.
-  static SystemEventListener &CreateWithQueue(const QueuePtr &queue);
+  static ::std::unique_ptr<SystemEventListener> CreateWithQueue(
+      const QueuePtr &queue);
 
   virtual ~SystemEventListener() = default;
 

@@ -65,7 +65,7 @@ class GraphicsEventDispatcherTest : public ::testing::Test {
   MockQueue<GraphicsEvent> *mock_queue_;
 
   // GraphicsEventDispatcher class to use for testing.
-  GraphicsEventDispatcher &dispatcher_;
+  ::std::unique_ptr<GraphicsEventDispatcher> dispatcher_;
 };
 
 // Tests that using the singleton interface works.
@@ -95,7 +95,7 @@ TEST_F(GraphicsEventDispatcherTest, DispatchTest) {
       .Times(1)
       .WillOnce(Return(true));
 
-  EXPECT_TRUE(dispatcher_.Dispatch(&(event.Common)));
+  EXPECT_TRUE(dispatcher_->Dispatch(&(event.Common)));
 
   // It should have set the fields correctly.
   EXPECT_THAT(event, GraphicsEventEqual(expected));
@@ -113,7 +113,7 @@ TEST_F(GraphicsEventDispatcherTest, DispatchMessageSendFailureTest) {
   EXPECT_CALL(*mock_queue_, EnqueueBlocking(GraphicsEventEqual(expected)))
       .Times(1)
       .WillOnce(Return(false));
-  EXPECT_FALSE(dispatcher_.Dispatch(&(event.Common)));
+  EXPECT_FALSE(dispatcher_->Dispatch(&(event.Common)));
 }
 
 // Tests that the builder version of Dispatch() works under normal conditions.
@@ -127,7 +127,7 @@ TEST_F(GraphicsEventDispatcherTest, DispatchBuilderTest) {
   EXPECT_CALL(*mock_queue_, EnqueueBlocking(GraphicsEventEqual(expected)))
       .Times(1)
       .WillOnce(Return(true));
-  EXPECT_TRUE(dispatcher_.Dispatch(kTestImage));
+  EXPECT_TRUE(dispatcher_->Dispatch(kTestImage));
 }
 
 }  // namespace testing

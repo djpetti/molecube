@@ -5,7 +5,6 @@
 #include "tachyon/lib/queue.h"
 
 #include "apps/libmc/constants.h"
-#include "apps/libmc/sim/protobuf/system_message.pb.h"
 
 namespace libmc {
 namespace core {
@@ -24,17 +23,17 @@ SystemEventListener &SystemEventListener::GetInstance() {
   return instance;
 }
 
-SystemEventListener &SystemEventListener::CreateWithQueue(
+::std::unique_ptr<SystemEventListener> SystemEventListener::CreateWithQueue(
     const QueuePtr &queue) {
-  static SystemEventListener instance(queue);
-  return instance;
+  SystemEventListener *instance = new SystemEventListener(queue);
+  return ::std::unique_ptr<SystemEventListener>(instance);
 }
 
 SystemEventListener::SystemEventListener(const QueuePtr &queue)
     : queue_(queue) {}
 
 void SystemEventListener::Listen(EventCommon *event) {
-  DLOG_IF(FATAL, !event) << "'event' should not be nullptr.";
+  DLOG_IF(FATAL, !event) << "'event' should not be NULL.";
   // Assume the event is of the correct type.
   SystemEvent *sys_event = reinterpret_cast<SystemEvent *>(event);
 
@@ -46,7 +45,7 @@ void SystemEventListener::Listen(EventCommon *event) {
 }
 
 bool SystemEventListener::Get(EventCommon *event) {
-  DLOG_IF(FATAL, !event) << "'event' should not be nullptr.";
+  DLOG_IF(FATAL, !event) << "'event' should not be NULL.";
   // Assume the event is of the correct type.
   SystemEvent *sys_event = reinterpret_cast<SystemEvent *>(event);
 

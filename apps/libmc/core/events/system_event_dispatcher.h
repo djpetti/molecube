@@ -32,7 +32,8 @@ class SystemEventDispatcher : public ProtoEventDispatcherInterface {
   //  queue: The new queue to use for this instance.
   // Returns:
   //  The instance that it created.
-  static SystemEventDispatcher &CreateWithQueue(const QueuePtr &queue);
+  static ::std::unique_ptr<SystemEventDispatcher> CreateWithQueue(
+      const QueuePtr &queue);
 
   virtual ~SystemEventDispatcher() = default;
 

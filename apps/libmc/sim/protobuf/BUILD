@@ -52,6 +52,11 @@ proto_library(
   srcs = ["graphics_message.proto"],
 )
 
+cc_proto_library(
+  name = "cc_graphics_message",
+  deps = [":graphics_message"],
+)
+
 python_proto_library(
   name = "python_graphics_message",
   deps = [":graphics_message"],

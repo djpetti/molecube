@@ -32,7 +32,8 @@ class GraphicsEventDispatcher : public EventDispatcherInterface {
   //  queue: The new queue to use for this instance.
   // Returns:
   //  The instance that it created.
-  static GraphicsEventDispatcher &CreateWithQueue(const QueuePtr &queue);
+  static ::std::unique_ptr<GraphicsEventDispatcher> CreateWithQueue(
+      const QueuePtr &queue);
 
   virtual ~GraphicsEventDispatcher();
 

@@ -4,6 +4,7 @@ cc_library(
   hdrs = glob(["*.h"]),
   deps = ["//apps/libmc:constants",
           "//apps/libmc/sim/protobuf:cc_system_message",
+          "//apps/libmc/sim/protobuf:cc_graphics_message",
           "@com_google_protobuf//:protobuf_lite",
           "@com_google_glog//:glog",
           "@tachyon//:tachyon"],

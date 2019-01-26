@@ -20,16 +20,18 @@ GraphicsEventDispatcher &GraphicsEventDispatcher::GetInstance() {
 
   // This is a slight abuse of the static keyword, but it makes our life easier
   // by guaranteeing that this will be created once and eventually destroyed.
+  // We make the queue of size 1 because the frames take up a lot of space, and
+  // we don't want to have to store any more than necessary in SHM.
   static const QueuePtr &queue =
-      Queue<GraphicsEvent>::FetchProducerQueue(kQueueNames.GraphicsQueue);
+      Queue<GraphicsEvent>::FetchSizedProducerQueue(kQueueNames.GraphicsQueue, 1);
   static GraphicsEventDispatcher instance(queue);
   return instance;
 }
 
-GraphicsEventDispatcher &GraphicsEventDispatcher::CreateWithQueue(
+::std::unique_ptr<GraphicsEventDispatcher> GraphicsEventDispatcher::CreateWithQueue(
     const QueuePtr &queue) {
-  static GraphicsEventDispatcher instance(queue);
-  return instance;
+  GraphicsEventDispatcher *instance = new GraphicsEventDispatcher(queue);
+  return ::std::unique_ptr<GraphicsEventDispatcher>(instance);
 }
 
 GraphicsEventDispatcher::GraphicsEventDispatcher(const QueuePtr &queue)

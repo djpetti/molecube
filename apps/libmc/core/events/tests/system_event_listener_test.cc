@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "tachyon/lib/pool.h"
 #include "tachyon/lib/queue_interface.h"
 #include "tachyon/test_utils/mock_queue.h"
 
@@ -18,7 +17,6 @@ namespace testing {
 
 using ::tachyon::testing::MockQueue;
 using ::tachyon::QueueInterface;
-using ::tachyon::Pool;
 
 using ::testing::DoAll;
 using ::testing::Return;
@@ -51,7 +49,7 @@ class SystemEventListenerTest : public ::testing::Test {
   MockQueue<SystemEvent> *mock_queue_;
 
   // SystemEventListener class to use for testing.
-  SystemEventListener &listener_;
+  ::std::unique_ptr<SystemEventListener> listener_;
 };
 
 // Tests that using the singleton interface works.
@@ -83,14 +81,14 @@ TEST_F(SystemEventListenerTest, ListenTest) {
       .WillOnce(SetArgPointee<0>(event))
       .WillOnce(SetArgPointee<0>(next_event));
 
-  listener_.Listen(&(got_event.Common));
+  listener_->Listen(&(got_event.Common));
 
   // It should have received the correct event.
   EXPECT_EQ(EventType::SYSTEM, got_event.Common.Type);
   EXPECT_FALSE(got_event.Shutdown);
 
   // This should work even when we tell it to shutdown.
-  listener_.Listen(&(got_event.Common));
+  listener_->Listen(&(got_event.Common));
 
   EXPECT_EQ(EventType::SYSTEM, got_event.Common.Type);
   EXPECT_TRUE(got_event.Shutdown);
@@ -114,14 +112,14 @@ TEST_F(SystemEventListenerTest, GetTest) {
       .WillOnce(DoAll(SetArgPointee<0>(event), Return(true)))
       .WillOnce(DoAll(SetArgPointee<0>(next_event), Return(true)));
 
-  EXPECT_TRUE(listener_.Get(&(got_event.Common)));
+  EXPECT_TRUE(listener_->Get(&(got_event.Common)));
 
   // It should have received the correct event.
   EXPECT_EQ(EventType::SYSTEM, got_event.Common.Type);
   EXPECT_FALSE(got_event.Shutdown);
 
   // This should work even when we tell it to shutdown.
-  EXPECT_TRUE(listener_.Get(&(got_event.Common)));
+  EXPECT_TRUE(listener_->Get(&(got_event.Common)));
 
   EXPECT_EQ(EventType::SYSTEM, got_event.Common.Type);
   EXPECT_TRUE(got_event.Shutdown);
@@ -137,7 +135,7 @@ TEST_F(SystemEventListenerTest, GetNoEventTest) {
       .WillOnce(Return(false));
 
   // This should cause the entire function to fail.
-  EXPECT_FALSE(listener_.Get(&(got_event.Common)));
+  EXPECT_FALSE(listener_->Get(&(got_event.Common)));
 }
 
 }  // namespace testing

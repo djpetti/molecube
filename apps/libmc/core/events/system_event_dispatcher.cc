@@ -24,10 +24,10 @@ SystemEventDispatcher &SystemEventDispatcher::GetInstance() {
   return instance;
 }
 
-SystemEventDispatcher &SystemEventDispatcher::CreateWithQueue(
+::std::unique_ptr<SystemEventDispatcher> SystemEventDispatcher::CreateWithQueue(
     const QueuePtr &queue) {
-  static SystemEventDispatcher instance(queue);
-  return instance;
+  SystemEventDispatcher *instance = new SystemEventDispatcher(queue);
+  return ::std::unique_ptr<SystemEventDispatcher>(instance);
 }
 
 SystemEventDispatcher::SystemEventDispatcher(const QueuePtr &queue)

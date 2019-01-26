@@ -46,7 +46,7 @@ class SystemEventDispatcherTest : public ::testing::Test {
   MockQueue<SystemEvent> *mock_queue_;
 
   // SystemEventDispatcher class to use for testing.
-  SystemEventDispatcher &dispatcher_;
+  ::std::unique_ptr<SystemEventDispatcher> dispatcher_;
 };
 
 // Tests that using the singleton interface works.
@@ -78,7 +78,7 @@ TEST_F(SystemEventDispatcherTest, DispatchTest) {
       .Times(1)
       .WillOnce(Return(true));
 
-  EXPECT_TRUE(dispatcher_.Dispatch(&(event.Common)));
+  EXPECT_TRUE(dispatcher_->Dispatch(&(event.Common)));
 
   // It should have set the fields correctly.
   EXPECT_EQ(EventType::SYSTEM, event.Common.Type);
@@ -86,7 +86,7 @@ TEST_F(SystemEventDispatcherTest, DispatchTest) {
 
   // This should work even if we tell it to shut down.
   event.Shutdown = true;
-  EXPECT_TRUE(dispatcher_.Dispatch(&(event.Common)));
+  EXPECT_TRUE(dispatcher_->Dispatch(&(event.Common)));
 
   EXPECT_EQ(EventType::SYSTEM, event.Common.Type);
   EXPECT_TRUE(event.Shutdown);
@@ -104,7 +104,7 @@ TEST_F(SystemEventDispatcherTest, DispatchMessageSendFailureTest) {
   EXPECT_CALL(*mock_queue_, EnqueueBlocking(SystemEventEqual(expected)))
       .Times(1)
       .WillOnce(Return(false));
-  EXPECT_FALSE(dispatcher_.Dispatch(&(event.Common)));
+  EXPECT_FALSE(dispatcher_->Dispatch(&(event.Common)));
 }
 
 // Tests that the builder version of Dispatch works under normal conditions.
@@ -118,7 +118,7 @@ TEST_F(SystemEventDispatcherTest, DispatchBuilderTest) {
   EXPECT_CALL(*mock_queue_, EnqueueBlocking(SystemEventEqual(expected)))
       .Times(1)
       .WillOnce(Return(true));
-  EXPECT_TRUE(dispatcher_.Dispatch(false));
+  EXPECT_TRUE(dispatcher_->Dispatch(false));
 
   expected.Shutdown = true;
 
@@ -126,7 +126,7 @@ TEST_F(SystemEventDispatcherTest, DispatchBuilderTest) {
   EXPECT_CALL(*mock_queue_, EnqueueBlocking(SystemEventEqual(expected)))
       .Times(1)
       .WillOnce(Return(true));
-  EXPECT_TRUE(dispatcher_.Dispatch(true));
+  EXPECT_TRUE(dispatcher_->Dispatch(true));
 }
 
 }  // namespace testing
