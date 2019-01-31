@@ -26,10 +26,12 @@ struct Simulator {
 struct QueueNames {
   const char *SysManagerQueue;
   const char *GraphicsQueue;
+  const char *EventNotifyQueue;
 };
 
 constexpr Simulator kSimulator = {"/dev/vport1p1", 115200, 1024, 160, 128};
-constexpr QueueNames kQueueNames = {"SysManagerQueue", "GraphicsQueue"};
+constexpr QueueNames kQueueNames = {"SysManagerQueue", "GraphicsQueue",
+                                    "EventNotifyQueue"};
 
 // The buffer size should be even for COWS to work reliably.
 static_assert(kSimulator.MaxPacketSize % 2 == 0);

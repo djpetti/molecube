@@ -65,5 +65,25 @@ bool SimulatorProcess::HandleSerialMessage() {
   return true;
 }
 
+bool SimulatorProcess::HandleEvent() {
+  return true;
+}
+
+void SimulatorProcess::ReceivingThread() {
+  LOG(INFO) << "Starting receiving thread.";
+
+  while (HandleSerialMessage());
+
+  LOG(ERROR) << "Exiting receiving thread.";
+}
+
+void SimulatorProcess::SendingThread() {
+  LOG(INFO) << "Starting sending thread.";
+
+  while (HandleEvent());
+
+  LOG(ERROR) << "Exiting sending thread.";
+}
+
 }  // namespace sim
 }  // namespace libmc

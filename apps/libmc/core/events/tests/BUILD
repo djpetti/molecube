@@ -71,3 +71,19 @@ cc_test(
   size = "small",
   restricted_to = ["//cpus:x86"],
 )
+
+cc_test(
+  name = "event_multiplexer_test",
+  copts = ["-Iexternal/gtest/googletest/include",
+           "-Iexternal/gtest/googlemock/include",
+           "-Iexternal/"],
+  srcs = ["event_multiplexer_test.cc"],
+  deps = [":mocks",
+          "//apps/libmc/core/events",
+          "@gtest//:gtest",
+          "@gtest//:gmock",
+          "@tachyon",
+          "@tachyon//:tachyon_test"],
+  size = "small",
+  restricted_to = ["//cpus:x86"],
+)

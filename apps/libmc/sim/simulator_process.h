@@ -28,10 +28,20 @@ class SimulatorProcess : public core::ProcessInterface {
   // Returns:
   //  True if setup succeeded, false otherwise.
   bool SetUp();
+
   // Handles the next message from the serial.
   // Returns:
   //  True if handling was successful, false otherwise.
   bool HandleSerialMessage();
+  // Handles the next event.
+  // Returns:
+  //  True if handling was successful, false otherwise.
+  bool HandleEvent();
+
+  // Entry point for thread receiving serial data.
+  void ReceivingThread();
+  // Entry point for thread sending serial data.
+  void SendingThread();
 
   // SimulatorCom instance to use for communication.
   SimulatorComInterface *com_;
