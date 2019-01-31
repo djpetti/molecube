@@ -8,7 +8,7 @@
 #include "tachyon/lib/queue_interface.h"
 
 #include "event.h"
-#include "proto_event_dispatcher_interface.h"
+#include "proto_event_dispatcher.h"
 #include "system_event.h"
 
 namespace libmc {
@@ -16,7 +16,7 @@ namespace core {
 namespace events {
 
 // Dispatcher for System events.
-class SystemEventDispatcher : public ProtoEventDispatcherInterface {
+class SystemEventDispatcher : public ProtoEventDispatcher {
  public:
   // Typedef for the queue type.
   typedef ::std::unique_ptr<::tachyon::QueueInterface<SystemEvent>> QueuePtr;
@@ -27,7 +27,8 @@ class SystemEventDispatcher : public ProtoEventDispatcherInterface {
   static SystemEventDispatcher &GetInstance();
   // Allows for injection of the queue during testing. This will always create a
   // new instance, thus breaking the singleton property. Therefore, it should
-  // only be used for testing.
+  // only be used for testing. It also automatically disables multiplexing,
+  // regardless of what the multiplexing setting is for this event type.
   // Args:
   //  queue: The new queue to use for this instance.
   // Returns:

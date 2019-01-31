@@ -3,7 +3,7 @@
 
 #include "gmock/gmock.h"
 
-#include "apps/libmc/core/events/event_dispatcher_interface.h"
+#include "apps/libmc/core/events/event_dispatcher.h"
 #include "apps/libmc/core/events/event.h"
 
 namespace libmc {
@@ -12,7 +12,7 @@ namespace events {
 namespace testing {
 
 // Basic mock class for all event dispatchers.
-class MockEventDispatcher : public EventDispatcherInterface {
+class MockEventDispatcher : public EventDispatcher {
  public:
   MOCK_METHOD1(Dispatch, bool(EventCommon *event));
 };

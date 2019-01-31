@@ -11,7 +11,7 @@
 namespace libmc {
 namespace sim {
 
-using core::events::ProtoEventDispatcherInterface;
+using core::events::ProtoEventDispatcher;
 using core::events::SystemEventDispatcher;
 using ::google::protobuf::MessageLite;
 
@@ -22,7 +22,7 @@ SimulatorProcess::SimulatorProcess()
 }
 
 SimulatorProcess::SimulatorProcess(SimulatorComInterface *com,
-                                   ProtoEventDispatcherInterface *dispatcher)
+                                   ProtoEventDispatcher *dispatcher)
     : com_(com), dispatcher_(dispatcher) {}
 
 SimulatorProcess::~SimulatorProcess() {

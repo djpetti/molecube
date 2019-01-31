@@ -30,8 +30,10 @@ SystemEventDispatcher &SystemEventDispatcher::GetInstance() {
   return ::std::unique_ptr<SystemEventDispatcher>(instance);
 }
 
+// Disable multiplexing with this constructor, since it is only used for
+// testing.
 SystemEventDispatcher::SystemEventDispatcher(const QueuePtr &queue)
-    : queue_(queue) {}
+    : ProtoEventDispatcher(false), queue_(queue) {}
 
 bool SystemEventDispatcher::Dispatch(EventCommon *event) {
   // First, cast to the proper event type.
@@ -47,6 +49,11 @@ bool SystemEventDispatcher::Dispatch(EventCommon *event) {
     LOG(ERROR) << "Enqueue failed. Is system_manager_process running?";
     return false;
   }
+
+  // We don't have a really good way to recover from an error state here, so if
+  // PrepareMultiplexed() fails, it's a fatal error.
+  CHECK(PrepareMultiplexed(sys_event->Common.Type))
+      << "PrepareMultiplexed() failed unexpectedly.";
 
   return true;
 }

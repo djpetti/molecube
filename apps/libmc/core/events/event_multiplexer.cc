@@ -13,7 +13,7 @@ namespace events {
 using constants::kQueueNames;
 using ::tachyon::Queue;
 
-void EventMultiplexer::PrepareDispatch(EventType type) {
+bool EventMultiplexer::PrepareDispatch(EventType type) {
   // It would be ideal if this were a static class member, but having a queue as
   // one wreaks havok with the unit tests.
   static const EventMultiplexer::NotificationQueue notification_producer_queue =
@@ -22,7 +22,13 @@ void EventMultiplexer::PrepareDispatch(EventType type) {
 
   // Create and send the notification.
   EventNotification notification = {type};
-  notification_producer_queue->EnqueueBlocking(notification);
+  if (!notification_producer_queue->EnqueueBlocking(notification)) {
+    // This really shouldn't fail unless we don't have a consumer.
+    LOG(ERROR) << "Enqueue failed. Are all processes running?";
+    return false;
+  }
+
+  return true;
 }
 
 EventMultiplexer::EventMultiplexer()

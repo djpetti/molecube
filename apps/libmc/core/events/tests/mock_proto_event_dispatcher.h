@@ -6,7 +6,7 @@
 #include "google/protobuf/message_lite.h"
 
 #include "apps/libmc/core/events/event.h"
-#include "apps/libmc/core/events/proto_event_dispatcher_interface.h"
+#include "apps/libmc/core/events/proto_event_dispatcher.h"
 
 namespace libmc {
 namespace core {
@@ -14,7 +14,7 @@ namespace events {
 namespace testing {
 
 // Basic mock class for all Protobuf event dispatchers.
-class MockProtoEventDispatcher : public ProtoEventDispatcherInterface {
+class MockProtoEventDispatcher : public ProtoEventDispatcher {
  public:
   MOCK_METHOD1(Dispatch, bool(EventCommon *event));
   MOCK_METHOD1(DispatchMessage,

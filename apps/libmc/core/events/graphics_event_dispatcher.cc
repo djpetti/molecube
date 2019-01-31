@@ -34,8 +34,12 @@ GraphicsEventDispatcher &GraphicsEventDispatcher::GetInstance() {
   return ::std::unique_ptr<GraphicsEventDispatcher>(instance);
 }
 
+// Since this constructor is only used for testing, delegate to the
+// EventDispatcher() constructor to disable multiplexing completely.
 GraphicsEventDispatcher::GraphicsEventDispatcher(const QueuePtr &queue)
-    : queue_(queue), event_(CHECK_NOTNULL(new GraphicsEvent)) {
+    : EventDispatcher(false),
+      queue_(queue),
+      event_(CHECK_NOTNULL(new GraphicsEvent)) {
   // Permanently set the type of the event buffer.
   event_->Common.Type = EventType::GRAPHICS;
 }
@@ -61,6 +65,11 @@ bool GraphicsEventDispatcher::Dispatch(EventCommon *event) {
     LOG(ERROR) << "Enqueue failed. Is simulator_process running?";
     return false;
   }
+
+  // We don't have a really good way to recover from an error state here, so if
+  // PrepareMultiplexed() fails, it's a fatal error.
+  CHECK(PrepareMultiplexed(graphics_event->Common.Type))
+      << "PrepareMultiplexed() failed unexpectedly.";
 
   return true;
 }

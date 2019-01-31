@@ -34,7 +34,9 @@ class EventMultiplexer : public EventMultiplexerInterface {
   // events.
   // Args:
   //  type: The type of the event being dispatched.
-  static void PrepareDispatch(EventType type);
+  // Returns:
+  //  True if it succeeded, false otherwise.
+  static bool PrepareDispatch(EventType type);
 
   EventMultiplexer();
   // Alternate constructor that allows for injection of the queue, intended for

@@ -8,15 +8,16 @@
 #include "tachyon/lib/queue_interface.h"
 
 #include "event.h"
-#include "event_dispatcher_interface.h"
+#include "event_dispatcher.h"
 #include "graphics_event.h"
 
 namespace libmc {
 namespace core {
 namespace events {
 
-// Dispatcher for graphics events.
-class GraphicsEventDispatcher : public EventDispatcherInterface {
+// Dispatcher for graphics events. Note that this is meant to be used with a
+// multiplexer.
+class GraphicsEventDispatcher : public EventDispatcher {
  public:
   // Typedef for the queue type.
   typedef ::std::unique_ptr<::tachyon::QueueInterface<GraphicsEvent>> QueuePtr;
@@ -27,7 +28,8 @@ class GraphicsEventDispatcher : public EventDispatcherInterface {
   static GraphicsEventDispatcher &GetInstance();
   // Allows for injection of the queue during testing. This will always create a
   // new instance, thus breaking the singleton property. Therefore, it should
-  // only be used for testing.
+  // only be used for testing. When this is used, it also automatically disables
+  // multiplexing, regardless of the multiplexing settting for this event type.
   // Args:
   //  queue: The new queue to use for this instance.
   // Returns:

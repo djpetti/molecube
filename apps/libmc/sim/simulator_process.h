@@ -1,7 +1,7 @@
 #ifndef LIBMC_SIM_SIMULATOR_PROCESS_H_
 #define LIBMC_SIM_SIMULATOR_PROCESS_H_
 
-#include "apps/libmc/core/events/proto_event_dispatcher_interface.h"
+#include "apps/libmc/core/events/proto_event_dispatcher.h"
 #include "apps/libmc/core/process_interface.h"
 #include "simulator_com_interface.h"
 
@@ -18,7 +18,7 @@ class SimulatorProcess : public core::ProcessInterface {
   //  com: The SimulatorCom to use.
   //  dispatcher: The EventDispatcher to use.
   SimulatorProcess(SimulatorComInterface *com,
-                   core::events::ProtoEventDispatcherInterface *dispatcher);
+                   core::events::ProtoEventDispatcher *dispatcher);
   ~SimulatorProcess();
 
   virtual void Run();
@@ -49,7 +49,7 @@ class SimulatorProcess : public core::ProcessInterface {
   bool own_com_ = false;
 
   // EventDispatcher to use for dispatching system events.
-  core::events::ProtoEventDispatcherInterface *dispatcher_;
+  core::events::ProtoEventDispatcher *dispatcher_;
 };
 
 }  // namespace sim
