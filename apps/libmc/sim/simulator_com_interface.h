@@ -23,7 +23,7 @@ class SimulatorComInterface {
   //  message: The message to send.
   // Returns:
   //  True if sending the message succeeded, false otherwise.
-  virtual bool SendMessage(const ProtoMessage &message) = 0;
+  virtual bool SendMessage(const ProtoMessage *message) = 0;
   // Receives a message from the simulator.
   // Args:
   //  message: The message to receive into.

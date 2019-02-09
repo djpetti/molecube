@@ -8,6 +8,7 @@
 
 #include "apps/libmc/constants.h"
 #include "apps/libmc/sim/protobuf/graphics_message.pb.h"
+#include "apps/libmc/sim/protobuf/sim_message.pb.h"
 
 namespace libmc {
 namespace core {
@@ -18,6 +19,7 @@ using constants::kQueueNames;
 using constants::kSimulator;
 using ::google::protobuf::MessageLite;
 using sim::GraphicsMessage;
+using sim::SimMessage;
 using ::tachyon::Queue;
 
 // Number of pixels in the image.
@@ -96,23 +98,24 @@ bool GraphicsEventListener::Get(EventCommon *event) {
 void GraphicsEventListener::ListenProtobuf(MessageLite *message) {
   DLOG_IF(FATAL, !message) << "'message' should not be NULL.";
   // Downcast to the expected message type.
-  GraphicsMessage *graphics_message = dynamic_cast<GraphicsMessage *>(message);
-  DLOG_IF(FATAL, !graphics_message)
-      << "'messsage' must be of GraphicsMessage type";
+  SimMessage *sim_message = dynamic_cast<SimMessage *>(message);
+  DLOG_IF(FATAL, !sim_message)
+      << "'messsage' must be of SimMessage type";
 
   // First, listen for the event.
   Listen(&(event_->Common));
 
   // Convert the event to a protobuf message._
+  GraphicsMessage *graphics_message = sim_message->mutable_graphics();
   EventToMessage(event_, graphics_message);
 }
 
 bool GraphicsEventListener::GetProtobuf(MessageLite *message) {
   DLOG_IF(FATAL, !message) << "'message' should not be NULL.";
   // Downcast to the expected message type.
-  GraphicsMessage *graphics_message = dynamic_cast<GraphicsMessage *>(message);
-  DLOG_IF(FATAL, !graphics_message)
-      << "'messsage' must be of GraphicsMessage type";
+  SimMessage *sim_message = dynamic_cast<SimMessage *>(message);
+  DLOG_IF(FATAL, !sim_message)
+      << "'messsage' must be of SimMessage type";
 
   // First, get the event.
   if (!Get(&(event_->Common))) {
@@ -121,6 +124,7 @@ bool GraphicsEventListener::GetProtobuf(MessageLite *message) {
   }
 
   // Convert the event to a protobuf message.
+  GraphicsMessage *graphics_message = sim_message->mutable_graphics();
   EventToMessage(event_, graphics_message);
 
   return true;

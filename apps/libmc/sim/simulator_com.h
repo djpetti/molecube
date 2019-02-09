@@ -22,7 +22,7 @@ class SimulatorCom : public SimulatorComInterface {
 
   virtual bool Open();
 
-  virtual bool SendMessage(const ProtoMessage &message);
+  virtual bool SendMessage(const ProtoMessage *message);
   virtual bool ReceiveMessage(ProtoMessage *message);
 
  private:

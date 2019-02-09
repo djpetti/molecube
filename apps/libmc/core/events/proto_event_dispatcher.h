@@ -22,7 +22,7 @@ class ProtoEventDispatcher : public EventDispatcher {
   // Args:
   //  message: The message to dispatch based on.
   // Returns:
-  //  True if the dispatch succeeded or didn't happen, false if it failed.
+  //  True if the dispatch succeeded, false if it failed or didn't happen.
   virtual bool DispatchMessage(
       const ::google::protobuf::MessageLite *message) = 0;
 

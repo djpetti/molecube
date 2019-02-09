@@ -48,7 +48,7 @@ bool SimulatorCom::Open() {
   return serial_->Open(device, baud);
 }
 
-bool SimulatorCom::SendMessage(const ProtoMessage &message) {
+bool SimulatorCom::SendMessage(const ProtoMessage *message) {
   LOG(INFO) << "Sending message.";
 
   if (!sent_first_separator_) {
@@ -66,7 +66,7 @@ bool SimulatorCom::SendMessage(const ProtoMessage &message) {
     sent_first_separator_ = true;
   }
 
-  const uint32_t length = message.ByteSizeLong();
+  const uint32_t length = message->ByteSizeLong();
   // COWS adds 4 bytes of overhead.
   const uint32_t cows_length = length + 4;
   // We need the length to be a multiple of words, because that's how we stuff
@@ -79,7 +79,7 @@ bool SimulatorCom::SendMessage(const ProtoMessage &message) {
   CHECK(padded_length < constants::kSimulator.MaxPacketSize);
 
   // Serialize the message.
-  if (!message.SerializeToArray(send_buffer_ + 2, length)) {
+  if (!message->SerializeToArray(send_buffer_ + 2, length)) {
     LOG(ERROR) << "Failed to serialize message.";
     return false;
   }

@@ -63,6 +63,8 @@ cc_test(
            "-Iexternal/"],
   srcs = ["graphics_event_listener_test.cc"],
   deps = ["//apps/libmc/core/events",
+          "//apps/libmc/sim/protobuf:cc_sim_message",
+          "//apps/libmc/sim/protobuf:cc_graphics_message",
           "//apps/libmc:constants",
           "@gtest//:gtest",
           "@gtest//:gmock",

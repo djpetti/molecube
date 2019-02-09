@@ -5,6 +5,7 @@
 #include "tachyon/lib/queue.h"
 
 #include "apps/libmc/constants.h"
+#include "apps/libmc/sim/protobuf/sim_message.pb.h"
 #include "apps/libmc/sim/protobuf/system_message.pb.h"
 
 namespace libmc {
@@ -70,13 +71,21 @@ bool SystemEventDispatcher::Dispatch(bool shutdown) {
 bool SystemEventDispatcher::DispatchMessage(
     const ::google::protobuf::MessageLite *message) {
   // Downcast to the correct message type.
-  const sim::SystemMessage *sys_message =
-      dynamic_cast<const sim::SystemMessage *>(message);
+  const sim::SimMessage *sim_message =
+      dynamic_cast<const sim::SimMessage *>(message);
   // Check that a valid message was passed.
-  CHECK_NOTNULL(sys_message);
+  CHECK_NOTNULL(sim_message);
+
+  // Get the system submessage.
+  if (!sim_message->has_system()) {
+    // We don't have this submessage, so there's nothing for us to do.
+    VLOG(2) << "Ignoring unpopulated system message.";
+    return false;
+  }
+  const sim::SystemMessage &sys_message = sim_message->system();
 
   // Dispatch an event based on the contents.
-  return Dispatch(sys_message->shutdown());
+  return Dispatch(sys_message.shutdown());
 }
 
 }  // namespace events

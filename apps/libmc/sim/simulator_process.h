@@ -1,8 +1,14 @@
 #ifndef LIBMC_SIM_SIMULATOR_PROCESS_H_
 #define LIBMC_SIM_SIMULATOR_PROCESS_H_
 
+#include <unordered_map>
+
+#include "apps/libmc/core/events/event.h"
+#include "apps/libmc/core/events/event_multiplexer_interface.h"
 #include "apps/libmc/core/events/proto_event_dispatcher.h"
+#include "apps/libmc/core/events/proto_event_listener_interface.h"
 #include "apps/libmc/core/process_interface.h"
+#include "apps/libmc/sim/protobuf/sim_message.pb.h"
 #include "simulator_com_interface.h"
 
 namespace libmc {
@@ -17,13 +23,27 @@ class SimulatorProcess : public core::ProcessInterface {
   // Args:
   //  com: The SimulatorCom to use.
   //  dispatcher: The EventDispatcher to use.
-  SimulatorProcess(SimulatorComInterface *com,
-                   core::events::ProtoEventDispatcher *dispatcher);
+  //  multiplexer: The EventMultiplexer to use.
+  //  graphics_listener: The GraphicsEventListener to use.
+  SimulatorProcess(
+      SimulatorComInterface *com,
+      core::events::ProtoEventDispatcher *dispatcher,
+      core::events::EventMultiplexerInterface *multiplexer,
+      core::events::ProtoEventListenerInterface *graphics_listener);
   ~SimulatorProcess();
 
   virtual void Run();
 
  private:
+  // Private constructor used internally for initialization.
+  // Args:
+  //  com: The SimulatorCom to use.
+  //  dispatcher: The EventDispatcher to use.
+  //  multiplexer: The EventMultiplexer to use.
+  SimulatorProcess(SimulatorComInterface *com,
+                   core::events::ProtoEventDispatcher *dispatcher,
+                   core::events::EventMultiplexerInterface *multiplexer);
+
   // Performs one-time setup.
   // Returns:
   //  True if setup succeeded, false otherwise.
@@ -50,6 +70,15 @@ class SimulatorProcess : public core::ProcessInterface {
 
   // EventDispatcher to use for dispatching system events.
   core::events::ProtoEventDispatcher *dispatcher_;
+  // EventMultiplexer to use for receiving events.
+  core::events::EventMultiplexerInterface *multiplexer_;
+  // Whether we own the multiplexer.
+  bool own_multiplexer_ = false;
+  // Whether we own the event listeners.
+  bool own_listeners_ = false;
+
+  // For efficiency, we pre-allocate a SimMessage.
+  SimMessage sim_message_;
 };
 
 }  // namespace sim

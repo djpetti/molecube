@@ -134,7 +134,7 @@ TEST_F(SimulatorComTest, SendMessageTest) {
   // It should try to send the initial separator.
   EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
 
-  EXPECT_TRUE(com_.SendMessage(test_message));
+  EXPECT_TRUE(com_.SendMessage(&test_message));
 }
 
 // Tests that SendMessage sends the initial separator only once.
@@ -160,9 +160,9 @@ TEST_F(SimulatorComTest, SendMessageInitialSeparatorTest) {
   // It should try to send the initial separator, but only the first time.
   EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
 
-  EXPECT_TRUE(com_.SendMessage(test_message));
+  EXPECT_TRUE(com_.SendMessage(&test_message));
   // Call it again, during which it should not re-send the initial separator.
-  EXPECT_TRUE(com_.SendMessage(test_message));
+  EXPECT_TRUE(com_.SendMessage(&test_message));
 }
 
 
@@ -189,7 +189,7 @@ TEST_F(SimulatorComTest, SendMessageFailureTest) {
   // It should try to send the initial separator.
   EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(true));
 
-  EXPECT_FALSE(com_.SendMessage(test_message));
+  EXPECT_FALSE(com_.SendMessage(&test_message));
 }
 
 // Tests that SendMessage handles a failure to send the initial separator.
@@ -202,7 +202,7 @@ TEST_F(SimulatorComTest, SendMessageSeparatorFailureTest) {
   // It should try to send the initial separator, but fail.
   EXPECT_CALL(mock_serial_, SendMessage(_, 2)).Times(1).WillOnce(Return(false));
 
-  EXPECT_FALSE(com_.SendMessage(test_message));
+  EXPECT_FALSE(com_.SendMessage(&test_message));
 }
 
 // Tests that we can receive a message under normal conditions.

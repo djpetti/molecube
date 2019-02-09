@@ -16,7 +16,7 @@ class MockSimulatorCom : public SimulatorComInterface {
  public:
   MOCK_METHOD0(Open, bool());
 
-  MOCK_METHOD1(SendMessage, bool(const ProtoMessage &message));
+  MOCK_METHOD1(SendMessage, bool(const ProtoMessage *message));
   MOCK_METHOD1(ReceiveMessage, bool(ProtoMessage *message));
 };
 

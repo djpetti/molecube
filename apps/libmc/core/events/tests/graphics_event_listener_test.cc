@@ -13,6 +13,7 @@
 #include "apps/libmc/core/events/graphics_event.h"
 #include "apps/libmc/core/events/graphics_event_listener.h"
 #include "apps/libmc/sim/protobuf/graphics_message.pb.h"
+#include "apps/libmc/sim/protobuf/sim_message.pb.h"
 
 namespace libmc {
 namespace core {
@@ -22,6 +23,7 @@ namespace {
 
 using constants::kSimulator;
 using sim::GraphicsMessage;
+using sim::SimMessage;
 using ::tachyon::QueueInterface;
 using ::tachyon::testing::MockQueue;
 using ::testing::DoAll;
@@ -146,7 +148,7 @@ TEST_F(GraphicsEventListenerTest, ListenProtobufTest) {
       .Times(1)
       .WillOnce(SetArgPointee<0>(event));
 
-  GraphicsMessage message;
+  SimMessage message;
   listener_->ListenProtobuf(&message);
 
   // Create the expected message.
@@ -157,7 +159,8 @@ TEST_F(GraphicsEventListenerTest, ListenProtobufTest) {
   expected.mutable_image()->set_data(kTestImage, kNumPixels);
 
   // It should have received the correct message.
-  EXPECT_THAT(message, MessageEqual(expected));
+  ASSERT_TRUE(message.has_graphics());
+  EXPECT_THAT(message.graphics(), MessageEqual(expected));
 }
 
 // Tests that GetProtobuf() works under normal conditions.
@@ -172,7 +175,7 @@ TEST_F(GraphicsEventListenerTest, GetProtobufTest) {
       .Times(1)
       .WillOnce(DoAll(SetArgPointee<0>(event), Return(true)));
 
-  GraphicsMessage message;
+  SimMessage message;
   listener_->GetProtobuf(&message);
 
   // Create the expected message.
@@ -183,7 +186,8 @@ TEST_F(GraphicsEventListenerTest, GetProtobufTest) {
   expected.mutable_image()->set_data(kTestImage, kNumPixels);
 
   // It should have received the correct message.
-  EXPECT_THAT(message, MessageEqual(expected));
+  ASSERT_TRUE(message.has_graphics());
+  EXPECT_THAT(message.graphics(), MessageEqual(expected));
 }
 
 // Tests that GetProtobuf() handles the case where getting the event fails.
@@ -194,7 +198,7 @@ TEST_F(GraphicsEventListenerTest, GetProtobufNoEventTest) {
       .WillOnce(Return(false));
 
   // This should cause the entire function to fail.
-  GraphicsMessage message;
+  SimMessage message;
   EXPECT_FALSE(listener_->GetProtobuf(&message));
 }
 
