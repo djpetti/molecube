@@ -5,8 +5,6 @@ namespace graphics {
 
 // TODO (danielp): Fill in stub methods.
 
-void Primitive::AssociateGraphicsContext(internal::GraphicsContext *context) {}
-
 void Primitive::Move(int32_t x_amt, int32_t y_amt) {}
 
 void Primitive::SetPos(const Point &pos) {}

@@ -1,7 +1,7 @@
 #ifndef LIBMC_GRAPHICS_OVAL_H_
 #define LIBMC_GRAPHICS_OVAL_H_
 
-#include "types/graphics_types.h"
+#include "apps/libmc/graphics/types/graphics_types.h"
 #include "primitive.h"
 
 namespace libmc {

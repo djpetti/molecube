@@ -1,74 +1,41 @@
 #ifndef LIBMC_GRAPHICS_GRAPHICS_H_
 #define LIBMC_GRAPHICS_GRAPHICS_H_
 
-#include <stdint.h>
-
-#include <vector>
-
-#include "types/graphics_types.h"
-#include "oval.h"
-#include "primitive.h"
-#include "rectangle.h"
-#include "text.h"
+#include "plane.h"
 
 namespace libmc {
 namespace graphics {
 
-// A simple graphics class. Provides API for displaying things on the screen.
+// This is the absolute lowest-level graphics API that users have access to,
+// and it is designed as a thin wrapper around the kernel DRM system. Graphics
+// is the main class, which manages the entire thing.
 class Graphics {
  public:
-  // Gets the singleton graphics instance for this application.
-  // Returns:
-  //  The Graphics instance.
-  static Graphics &GetGraphics();
+  // Planes that are supported by the graphics hardware.
+  enum class SystemPlane {
+    HEO,
+    OVR1,
+    OVR2,
+    BASE
+  };
 
-  // Draws a rectangle on the screen.
-  // Args:
-  //  center: The center point of the rectangle.
-  //  width: The width of the rectangle, in px.
-  //  height: The height of the rectangle, in px.
-  // Returns:
-  //  The rectangle object that we have created.
-  Rectangle &DrawRect(const Point &center, uint32_t width, uint32_t height);
-  // Draws an oval on the screen.
-  // Args:
-  //  center: The center point of the oval.
-  //  width: The width of the oval, in px.
-  //  height: The height of the oval, in px.
-  // Returns:
-  //  The oval object that we have created.
-  Oval &DrawOval(const Point &center, uint32_t width, uint32_t height);
-  // Draws text on the screen.
-  // Args:
-  //  pos: The center point of the text's position.
-  //  size: The height of the text, in px.
-  // Returns:
-  //  The text object that we have created.
-  Text &DrawText(const Point &pos, uint16_t size);
+  // Gets the singleton graphics instance for the system, creating it if it
+  // doesn't exist.
+  static Graphics &GetInstance();
 
-  // Deletes an item.
+  // Gets a particular plane, which can then be manipulated directly.
   // Args:
-  //  item: The item to delete.
-  void DeleteItem(Primitive *item);
+  //  plane: The plane to get.
+  // Returns:
+  //  The selected plane.
+  Plane &GetPlane(SystemPlane plane) const;
 
-  // Sets the screen's background color.
-  // Args:
-  //  color: The color to set it to.
-  void SetBackgroundColor(const Color &color);
-
-  // Forces a repaint of the screen.
-  void Repaint();
+  // Convenience method that swaps the buffers for all planes.
+  void SwapBuffers();
 
  private:
-  // The singleton graphics instance.
-  static Graphics *graphics_;
-
-  // Arrays containing every primitive in existence. We essentially use these as
-  // pools to avoid allocating and deallocating memory for every primitive that
-  // comes along.
-  ::std::vector<Rectangle> rectangles_;
-  ::std::vector<Oval> ovals_;
-  ::std::vector<Text> text_;
+  // Private constructor to force use of singleton.
+  Graphics();
 };
 
 }  // namespace graphics

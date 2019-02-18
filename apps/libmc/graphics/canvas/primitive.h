@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-#include "internal/graphics_context.h"
-#include "types/graphics_types.h"
+#include "apps/libmc/graphics/types/graphics_types.h"
 
 namespace libmc {
 namespace graphics {
@@ -13,11 +12,6 @@ namespace graphics {
 class Primitive {
  public:
   virtual ~Primitive() = default;
-
-  // Associates a graphics context with this primitive. This must be called
-  // before anything else. The only reason it is not a constructor is so that
-  // we're free to use primitives in vectors.
-  void AssociateGraphicsContext(internal::GraphicsContext *context);
 
   // Moves the object by a certain amount.
   // Args:
@@ -61,9 +55,6 @@ class Primitive {
   static bool CheckOverlap(const Primitive *obj1, const Primitive *obj2);
 
  protected:
-  // Internal graphics context used for drawing.
-  internal::GraphicsContext *context_;
-
   // Position of the primitive.
   Point pos_;
   // Visibility status of the primitive.
